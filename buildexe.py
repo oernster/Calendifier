@@ -14,8 +14,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import stamp_version
-
 APP_NAME = "Calendifier"
 ENTRYPOINT = "main.py"
 ICON = Path("assets") / "calendar_icon.ico"
@@ -62,9 +60,6 @@ def _pyinstaller_available() -> bool:
 def build_exe() -> int:
     """Create the standalone app bundle using PyInstaller."""
     print(f"Building {APP_NAME} app bundle...")
-
-    # Keep the bundled docs' version in step with VERSION.
-    stamp_version.main()
 
     root = Path(__file__).resolve().parent
     dist_dir = root / "dist-pyinstaller"

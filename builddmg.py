@@ -21,7 +21,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-import stamp_version
 from build_utils import require, run, section
 from dmg_icon import png_to_icns, set_volume_icon
 
@@ -299,9 +298,6 @@ def apply_file_icon(png_path: Path) -> None:
 def main() -> int:
     print(f"\nCALENDIFIER DMG BUILDER  v{APP_VERSION}")
     print(f"Signing identity: {DEVELOPER_ID}")
-
-    # Keep bundled docs' version in step with VERSION.
-    stamp_version.main()
 
     check_platform()
     clean()

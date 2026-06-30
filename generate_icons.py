@@ -32,12 +32,44 @@ ICO_SIZES = (16, 24, 32, 48, 64, 128, 256)
 BASE_PNG_SIZE = 256
 SVG_EMBED_SIZE = 512
 
+# Fraction of the square canvas the solid artwork should occupy along its
+# longest axis. The remainder is a uniform transparent margin. Keeping the
+# glyph close to the edge (matching typical Windows app icons) is what stops it
+# rendering small on the taskbar next to icons that fill their canvas.
+CONTENT_FILL_RATIO = 0.88
+
+# Alpha (0-255) above which a pixel counts as solid artwork when measuring the
+# crop box. Faint anti-alias fringes, glows and drop shadows fall below this, so
+# a soft halo around the glyph does not defeat the trim.
+ALPHA_TRIM_THRESHOLD = 8
+
+
+def _trim_to_square(img: Image.Image) -> Image.Image:
+    """Trim the transparent border and re-pad to a square canvas.
+
+    The opaque content is framed to fill ``CONTENT_FILL_RATIO`` of the canvas
+    along its longest axis, leaving a uniform transparent margin, so the visible
+    glyph is as large as the standard icon margin allows.
+    """
+    alpha = img.split()[-1]
+    solid = alpha.point(lambda v: 255 if v > ALPHA_TRIM_THRESHOLD else 0)
+    bbox = solid.getbbox()
+    if bbox is None:
+        return img
+    content = img.crop(bbox)
+    content_w, content_h = content.size
+    side = round(max(content_w, content_h) / CONTENT_FILL_RATIO)
+    canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    offset = ((side - content_w) // 2, (side - content_h) // 2)
+    canvas.paste(content, offset, content)
+    return canvas
+
 
 def _load_master() -> Image.Image:
-    """Load the master PNG as RGBA, failing loudly if it is missing."""
+    """Load the master PNG as a tightly-framed square RGBA image."""
     if not MASTER_PNG.exists():
         raise SystemExit(f"❌ Master icon not found: {MASTER_PNG.resolve()}")
-    return Image.open(MASTER_PNG).convert("RGBA")
+    return _trim_to_square(Image.open(MASTER_PNG).convert("RGBA"))
 
 
 def _resized(master: Image.Image, size: int) -> Image.Image:

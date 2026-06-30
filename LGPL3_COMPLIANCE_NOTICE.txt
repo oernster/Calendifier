@@ -37,7 +37,7 @@ This distribution complies with LGPL3 requirements by:
 - Informing users of their rights to replace LGPL3 libraries
 
 Build Information:
-- Application: Calendifier v1.4.0
+- Application: Calendifier
 - PySide6: Dynamically linked
 - Distribution: Flatpak package
 - Compliance Date: 2025-06-28

@@ -19,7 +19,7 @@ from pathlib import Path
 _MAX_LINES = 400
 _ROOT = Path(__file__).resolve().parents[2]
 _SOURCE_DIRS = ("calendar_app",)
-_ROOT_MODULES = ("version.py", "stamp_version.py")
+_ROOT_MODULES = ("version.py",)
 
 # Pure data tables (data, not logic): permanently exempt from the line limit.
 _DATA_MODULES = frozenset(

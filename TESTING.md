@@ -1,5 +1,3 @@
-<!--VERSION-->1.7.0<!--/VERSION-->
-
 # Testing & Quality
 
 How Calendifier is tested, what the coverage gate covers, how to run it and how to extend it. For build and packaging instructions see [DEVELOPMENT-README.md](DEVELOPMENT-README.md).
@@ -36,7 +34,6 @@ The gated source set is the mock-free core logic, declared once as `[run] includ
 | Module | Responsibility |
 |--------|----------------|
 | `version.py` | Version reading and app metadata |
-| `stamp_version.py` | Stamping `VERSION` into static docs |
 | `calendar_app/shared/resources.py` | Icon and resource path resolution |
 | `calendar_app/data/models.py` | Domain data models |
 | `calendar_app/config/settings.py` | Settings manager and holiday-country resolution |

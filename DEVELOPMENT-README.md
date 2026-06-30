@@ -1,5 +1,3 @@
-<!--VERSION-->1.7.0<!--/VERSION-->
-
 # Development & Build Guide
 
 How to set up a development environment, run Calendifier and build it for each platform. For end-user installation see [README.md](README.md); for the test gate see [TESTING.md](TESTING.md); for the system design see [docs/architecture.md](docs/architecture.md).
@@ -50,9 +48,9 @@ The single source of truth for the version is the [VERSION](VERSION) file at the
 - `version.py` reads `VERSION` at runtime (frozen-build aware).
 - `pyproject.toml` declares the version dynamically from `VERSION`.
 - The build scripts read it through a `read_version()` helper.
-- Static docs (this file, `README.md`, `docs/**`) carry a `<!--VERSION-->1.7.0<!--/VERSION-->` token that [stamp_version.py](stamp_version.py) overwrites from `VERSION`. `buildexe.py` and `buildinstaller.py` call it automatically, so a packaged release always ships docs whose version matches `VERSION`.
+- The docs deliberately carry no version string, so there is nothing to keep in sync: the version lives only in `VERSION`, read by `version.py` at runtime and by `pyproject.toml` as the dynamic project version.
 
-To bump the version, edit `VERSION`, then run `python stamp_version.py` (or simply build).
+To bump the version, edit `VERSION`. Everything else reads from it.
 
 ## Icons
 

@@ -376,7 +376,7 @@ See **[TESTING.md](TESTING.md)** for the full testing policy, the gated module l
 
 ## 📦 Building & Distribution
 
-Calendifier is packaged with **PyInstaller** on every platform, using a consistent set of repo-root build scripts. The version is read from the single source of truth, the [`VERSION`](VERSION) file (currently <!--VERSION-->1.7.0<!--/VERSION-->), and stamped into the docs at build time. For full environment setup and step-by-step instructions see **[DEVELOPMENT-README.md](DEVELOPMENT-README.md)**.
+Calendifier is packaged with **PyInstaller** on every platform, using a consistent set of repo-root build scripts. The version is read from the single source of truth, the [`VERSION`](VERSION) file. For full environment setup and step-by-step instructions see **[DEVELOPMENT-README.md](DEVELOPMENT-README.md)**.
 
 ### 🪟 Windows (per-user installer)
 

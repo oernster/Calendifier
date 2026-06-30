@@ -10,7 +10,6 @@ branch = True
 # deliberately outside the gate (see pyproject.toml [tool.pytest.ini_options]).
 include =
     */version.py
-    */stamp_version.py
     */calendar_app/shared/resources.py
     */calendar_app/data/models.py
     */calendar_app/core/multi_country_holiday_provider.py
