@@ -21,6 +21,7 @@ include =
     */calendar_app/config/settings.py
     */calendar_app/localization/locale_detector.py
     */calendar_app/localization/number_formatter.py
+    */calendar_app/localization/country_endonyms.py
 omit =
     */venv/*
     */tests/*

@@ -75,7 +75,10 @@ class MultiCountryHolidayProvider:
         "LT": {"name": "Lithuania", "flag": "🇱🇹", "code": "LT"},  # lt_LT
         "CT": {
             "name": "Catalonia",
-            "flag": "🏴",
+            # Catalonia is a region of Spain and has no flag emoji that renders
+            # on Windows, so it shares the Spanish flag; the "Catalunya" label
+            # distinguishes it from the Spain entry.
+            "flag": "🇪🇸",
             "code": "ES",
         },  # ca_ES (Catalan region)
         # Keep GB for backward compatibility (default fallback)

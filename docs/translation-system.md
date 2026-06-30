@@ -541,10 +541,14 @@ To add a new language to Calendifier:
    - Name it with the locale code and `_holidays.json` suffix (e.g., `es_MX_holidays.json`)
    - Include translations for all holidays
 
-3. **Add Country Translations**:
-   - Create a new JSON file in `calendar_app/localization/country_translations/`
-   - Name it with the locale code and `_countries.json` suffix (e.g., `es_MX_countries.json`)
-   - Include translations for all country names
+3. **Country names**:
+   - Country names in the holiday-country selector are NOT translated per UI
+     locale. Each country is shown by its own native name (endonym), fixed
+     regardless of the interface language.
+   - These live in `calendar_app/localization/country_endonyms.py`. When a new
+     country is added to `MultiCountryHolidayProvider.SUPPORTED_COUNTRIES`, add
+     its endonym there (a structural test enforces that every supported country
+     has one).
 
 4. **Update Locale Detector**:
    - Add the new locale to the `SUPPORTED_LOCALES` list in `calendar_app/localization/locale_detector.py`

@@ -52,7 +52,6 @@ ICON_BG = (0x2D, 0x2D, 0x2D)
 DATA_DIRS = (
     "calendar_app/localization/translations",
     "calendar_app/localization/locale_holiday_translations",
-    "calendar_app/localization/country_translations",
     "assets",
 )
 

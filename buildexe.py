@@ -30,10 +30,6 @@ DATA_DIRS = (
         "calendar_app/localization/locale_holiday_translations",
         "calendar_app/localization/locale_holiday_translations",
     ),
-    (
-        "calendar_app/localization/country_translations",
-        "calendar_app/localization/country_translations",
-    ),
     ("assets", "assets"),
 )
 

@@ -466,6 +466,7 @@ class MainWindow(QMainWindow):
         from calendar_app.core.multi_country_holiday_provider import (
             MultiCountryHolidayProvider,
         )
+        from calendar_app.localization.country_endonyms import endonym
 
         self.country_widget = QWidget(self)
         self.country_widget.setObjectName("floating_country_selector")
@@ -493,8 +494,11 @@ class MainWindow(QMainWindow):
             MultiCountryHolidayProvider.AUTO_COUNTRY,
         )
         self.country_combo.insertSeparator(1)
+        # Show each country by its own native name (endonym), fixed regardless of
+        # the UI locale, so changing the app language never re-labels this list.
         for country_code, info in MultiCountryHolidayProvider.get_sorted_countries():
-            self.country_combo.addItem(f"{info['flag']} {info['name']}", country_code)
+            native = endonym(country_code, info["name"])
+            self.country_combo.addItem(f"{info['flag']} {native}", country_code)
 
         self.country_combo.setMaxVisibleItems(15)
         self.country_combo.setFocusPolicy(Qt.FocusPolicy.StrongFocus)

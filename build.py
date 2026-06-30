@@ -189,7 +189,6 @@ def build_with_pyinstaller(debug=False, console=False):
     data_files = [
         "calendar_app/localization/translations;calendar_app/localization/translations",
         "calendar_app/localization/locale_holiday_translations;calendar_app/localization/locale_holiday_translations",  # noqa: E501
-        "calendar_app/localization/country_translations;calendar_app/localization/country_translations",  # noqa: E501
         "assets;assets",
     ]
 
