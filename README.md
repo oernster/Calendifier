@@ -1,87 +1,87 @@
-# 📅 Calendifier
+# <img width="64" height="64" alt="calendifier" src="https://github.com/user-attachments/assets/84c2e298-8a53-4ea3-869b-7d154cee3ca8" /> Calendifier
 
 **Author: Oliver Ernster**
 
 <!-- Multi-language summary -->
-**🇺🇸 English (US):** Cross-platform desktop calendar and Home Assistant integration with analog clock, event handling, note taking, and holidays. If you like it please buy me a coffee: [Donation link](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇺🇸 English (US):** Cross-platform desktop calendar and Home Assistant integration with analog clock, event handling, note taking, and holidays. If you like it please buy me a coffee: [Donation link](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇬🇧 English (UK):** Cross-platform desktop calendar and Home Assistant integration with analogue clock, event handling, note taking, and holidays. If you like it please buy me a coffee: [Donation link](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇬🇧 English (UK):** Cross-platform desktop calendar and Home Assistant integration with analogue clock, event handling, note taking, and holidays. If you like it please buy me a coffee: [Donation link](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇸🇦 العربية:** تقويم سطح المكتب متعدد المنصات وتكامل مساعد المنزل مع ساعة تناظرية ومعالجة الأحداث وتدوين الملاحظات والعطلات. إذا أعجبك، يرجى شراء قهوة لي: [رابط التبرع](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇸🇦 العربية:** تقويم سطح المكتب متعدد المنصات وتكامل مساعد المنزل مع ساعة تناظرية ومعالجة الأحداث وتدوين الملاحظات والعطلات. إذا أعجبك، يرجى شراء قهوة لي: [رابط التبرع](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇧🇬 Български:** Кроссплатформен десктоп календар и интеграция с Домашен Асистент с аналогов часовник, управление на събития, бележки и празници. Ако ви харесва, моля купете ми кафе: [Линк за дарение](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇧🇬 Български:** Кроссплатформен десктоп календар и интеграция с Домашен Асистент с аналогов часовник, управление на събития, бележки и празници. Ако ви харесва, моля купете ми кафе: [Линк за дарение](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇪🇸 Català:** Calendari d'escriptori multiplataforma i integració d'Assistent Domèstic amb rellotge analògic, gestió d'esdeveniments, presa de notes i festius. Si t'agrada, si us plau compra'm un cafè: [Enllaç de donació](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇪🇸 Català:** Calendari d'escriptori multiplataforma i integració d'Assistent Domèstic amb rellotge analògic, gestió d'esdeveniments, presa de notes i festius. Si t'agrada, si us plau compra'm un cafè: [Enllaç de donació](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇨🇿 Čeština:** Multiplatformní desktopový kalendář a integrace Domácího Asistenta s analogovými hodinami, správou událostí, psaním poznámek a svátky. Pokud se vám líbí, kupte mi prosím kávu: [Odkaz na darování](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇨🇿 Čeština:** Multiplatformní desktopový kalendář a integrace Domácího Asistenta s analogovými hodinami, správou událostí, psaním poznámek a svátky. Pokud se vám líbí, kupte mi prosím kávu: [Odkaz na darování](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇩🇰 Dansk:** Tværplatform skrivebordskalender og Hjemmeassistent-integration med analogt ur, begivenhedshåndtering, notetagning og helligdage. Hvis du kan lide det, så køb mig en kaffe: [Donationslink](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇩🇰 Dansk:** Tværplatform skrivebordskalender og Hjemmeassistent-integration med analogt ur, begivenhedshåndtering, notetagning og helligdage. Hvis du kan lide det, så køb mig en kaffe: [Donationslink](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇩🇪 Deutsch:** Plattformübergreifender Desktop-Kalender und Home Assistant-Integration mit analoger Uhr, Ereignisbehandlung, Notizen und Feiertagen. Wenn es Ihnen gefällt, kaufen Sie mir bitte einen Kaffee: [Spendenlink](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇩🇪 Deutsch:** Plattformübergreifender Desktop-Kalender und Home Assistant-Integration mit analoger Uhr, Ereignisbehandlung, Notizen und Feiertagen. Wenn es Ihnen gefällt, kaufen Sie mir bitte einen Kaffee: [Spendenlink](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇬🇷 Ελληνικά:** Πολυπλατφορμικό ημερολόγιο επιφάνειας εργασίας και ενσωμάτωση Οικιακού Βοηθού με αναλογικό ρολόι, διαχείριση συμβάντων, σημειώσεις και αργίες. Αν σας αρέσει, παρακαλώ αγοράστε μου έναν καφέ: [Σύνδεσμος δωρεάς](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇬🇷 Ελληνικά:** Πολυπλατφορμικό ημερολόγιο επιφάνειας εργασίας και ενσωμάτωση Οικιακού Βοηθού με αναλογικό ρολόι, διαχείριση συμβάντων, σημειώσεις και αργίες. Αν σας αρέσει, παρακαλώ αγοράστε μου έναν καφέ: [Σύνδεσμος δωρεάς](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇪🇸 Español:** Calendario de escritorio multiplataforma e integración de Asistente del Hogar con reloj analógico, gestión de eventos, toma de notas y días festivos. Si te gusta, por favor cómprame un café: [Enlace de donación](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇪🇸 Español:** Calendario de escritorio multiplataforma e integración de Asistente del Hogar con reloj analógico, gestión de eventos, toma de notas y días festivos. Si te gusta, por favor cómprame un café: [Enlace de donación](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇪🇪 Eesti:** Platvormideülene töölauakalender ja Kodu Assistendi integratsioon analoogkella, sündmuste käsitlemise, märkmete tegemise ja pühade funktsioonidega. Kui see meeldib, palun osta mulle kohv: [Annetuse link](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇪🇪 Eesti:** Platvormideülene töölauakalender ja Kodu Assistendi integratsioon analoogkella, sündmuste käsitlemise, märkmete tegemise ja pühade funktsioonidega. Kui see meeldib, palun osta mulle kohv: [Annetuse link](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇫🇮 Suomi:** Monialustainen työpöytäkalenteri ja Kotiavustaja-integraatio analogisella kellolla, tapahtumien käsittelyllä, muistiinpanoilla ja juhlapäivillä. Jos pidät siitä, osta minulle kahvi: [Lahjoituslinkki](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇫🇮 Suomi:** Monialustainen työpöytäkalenteri ja Kotiavustaja-integraatio analogisella kellolla, tapahtumien käsittelyllä, muistiinpanoilla ja juhlapäivillä. Jos pidät siitä, osta minulle kahvi: [Lahjoituslinkki](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇫🇷 Français:** Calendrier de bureau multiplateforme et intégration Assistant Domestique avec horloge analogique, gestion d'événements, prise de notes et jours fériés. Si vous l'aimez, achetez-moi un café s'il vous plaît: [Lien de don](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇫🇷 Français:** Calendrier de bureau multiplateforme et intégration Assistant Domestique avec horloge analogique, gestion d'événements, prise de notes et jours fériés. Si vous l'aimez, achetez-moi un café s'il vous plaît: [Lien de don](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇨🇦 Français (Québec):** Calendrier de bureau multiplateforme et intégration Assistant Domestique avec horloge analogique, gestion d'événements, prise de notes et jours fériés. Si vous l'aimez, achetez-moi un café s'il vous plaît: [Lien de don](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇨🇦 Français (Québec):** Calendrier de bureau multiplateforme et intégration Assistant Domestique avec horloge analogique, gestion d'événements, prise de notes et jours fériés. Si vous l'aimez, achetez-moi un café s'il vous plaît: [Lien de don](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇮🇱 עברית:** לוח שנה שולחני חוצה פלטפורמות ואינטגרציה עם עוזר בית עם שעון אנלוגי, טיפול באירועים, רישום הערות וחגים. אם אתם אוהבים את זה, אנא קנו לי קפה: [קישור לתרומה](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇮🇱 עברית:** לוח שנה שולחני חוצה פלטפורמות ואינטגרציה עם עוזר בית עם שעון אנלוגי, טיפול באירועים, רישום הערות וחגים. אם אתם אוהבים את זה, אנא קנו לי קפה: [קישור לתרומה](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇮🇳 हिन्दी:** एनालॉग घड़ी, इवेंट हैंडलिंग, नोट लेने और छुट्टियों के साथ क्रॉस-प्लेटफॉर्म डेस्कटॉप कैलेंडर और होम असिस्टेंट एकीकरण। यदि आपको यह पसंद है, तो कृपया मुझे एक कॉफी खरीदें: [दान लिंक](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇮🇳 हिन्दी:** एनालॉग घड़ी, इवेंट हैंडलिंग, नोट लेने और छुट्टियों के साथ क्रॉस-प्लेटफॉर्म डेस्कटॉप कैलेंडर और होम असिस्टेंट एकीकरण। यदि आपको यह पसंद है, तो कृपया मुझे एक कॉफी खरीदें: [दान लिंक](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇭🇷 Hrvatski:** Višeplatformski desktop kalendar i integracija Kućnog Asistenta s analognim satom, upravljanjem događaja, bilježenjem i blagdanima. Ako vam se sviđa, molimo kupite mi kavu: [Link za donaciju](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇭🇷 Hrvatski:** Višeplatformski desktop kalendar i integracija Kućnog Asistenta s analognim satom, upravljanjem događaja, bilježenjem i blagdanima. Ako vam se sviđa, molimo kupite mi kavu: [Link za donaciju](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇭🇺 Magyar:** Többplatformos asztali naptár és Otthoni Asszisztens integráció analóg órával, eseménykezeléssel, jegyzetelésssel és ünnepekkel. Ha tetszik, kérem vegyenek nekem egy kávét: [Adományozási link](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇭🇺 Magyar:** Többplatformos asztali naptár és Otthoni Asszisztens integráció analóg órával, eseménykezeléssel, jegyzetelésssel és ünnepekkel. Ha tetszik, kérem vegyenek nekem egy kávét: [Adományozási link](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇮🇩 Bahasa Indonesia:** Kalender desktop lintas platform dan integrasi Asisten Rumah dengan jam analog, penanganan acara, pencatatan dan hari libur. Jika Anda menyukainya, tolong belikan saya kopi: [Link donasi](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇮🇩 Bahasa Indonesia:** Kalender desktop lintas platform dan integrasi Asisten Rumah dengan jam analog, penanganan acara, pencatatan dan hari libur. Jika Anda menyukainya, tolong belikan saya kopi: [Link donasi](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇮🇹 Italiano:** Calendario desktop multipiattaforma e integrazione Assistente Domestico con orologio analogico, gestione eventi, presa di note e festività. Se ti piace, per favore comprami un caffè: [Link donazione](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇮🇹 Italiano:** Calendario desktop multipiattaforma e integrazione Assistente Domestico con orologio analogico, gestione eventi, presa di note e festività. Se ti piace, per favore comprami un caffè: [Link donazione](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇯🇵 日本語:** アナログ時計、イベント処理、ノート取り、祝日機能を備えたクロスプラットフォームデスクトップカレンダーとホームアシスタント統合。気に入ったら、コーヒーを買ってください: [寄付リンク](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇯🇵 日本語:** アナログ時計、イベント処理、ノート取り、祝日機能を備えたクロスプラットフォームデスクトップカレンダーとホームアシスタント統合。気に入ったら、コーヒーを買ってください: [寄付リンク](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇰🇷 한국어:** 아날로그 시계, 이벤트 처리, 메모 작성 및 휴일 기능을 갖춘 크로스 플랫폼 데스크톱 캘린더 및 홈 어시스턴트 통합. 마음에 드시면 커피 한 잔 사주세요: [기부 링크](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇰🇷 한국어:** 아날로그 시계, 이벤트 처리, 메모 작성 및 휴일 기능을 갖춘 크로스 플랫폼 데스크톱 캘린더 및 홈 어시스턴트 통합. 마음에 드시면 커피 한 잔 사주세요: [기부 링크](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇱🇹 Lietuvių:** Daugiaplatformis darbalaukio kalendorius ir Namų Asistento integracija su analoginiu laikrodžiu, įvykių tvarkymu, užrašais ir šventėmis. Jei jums patinka, prašau nupirkite man kavos: [Aukojimo nuoroda](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇱🇹 Lietuvių:** Daugiaplatformis darbalaukio kalendorius ir Namų Asistento integracija su analoginiu laikrodžiu, įvykių tvarkymu, užrašais ir šventėmis. Jei jums patinka, prašau nupirkite man kavos: [Aukojimo nuoroda](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇱🇻 Latviešu:** Daudplatformu darbvirsmas kalendārs un Mājas Asistenta integrācija ar analogu pulksteni, notikumu apstrādi, piezīmēm un svētkiem. Ja jums patīk, lūdzu nopērciet man kafiju: [Ziedojuma saite](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇱🇻 Latviešu:** Daudplatformu darbvirsmas kalendārs un Mājas Asistenta integrācija ar analogu pulksteni, notikumu apstrādi, piezīmēm un svētkiem. Ja jums patīk, lūdzu nopērciet man kafiju: [Ziedojuma saite](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇳🇴 Norsk:** Kryssplattform skrivebordskalender og Hjemmeassistent-integrasjon med analog klokke, hendelseshåndtering, notater og helligdager. Hvis du liker det, kjøp meg en kaffe: [Donasjonslenke](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇳🇴 Norsk:** Kryssplattform skrivebordskalender og Hjemmeassistent-integrasjon med analog klokke, hendelseshåndtering, notater og helligdager. Hvis du liker det, kjøp meg en kaffe: [Donasjonslenke](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇳🇱 Nederlands:** Platformonafhankelijke desktopkalender en Thuisassistent-integratie met analoge klok, gebeurtenisbeheer, notities en feestdagen. Als je het leuk vindt, koop me dan een koffie: [Donatielink](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇳🇱 Nederlands:** Platformonafhankelijke desktopkalender en Thuisassistent-integratie met analoge klok, gebeurtenisbeheer, notities en feestdagen. Als je het leuk vindt, koop me dan een koffie: [Donatielink](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇵🇱 Polski:** Wieloplatformowy kalendarz pulpitu i integracja Asystenta Domowego z zegarem analogowym, obsługą wydarzeń, notatkami i świętami. Jeśli ci się podoba, kup mi kawę: [Link do darowizny](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇵🇱 Polski:** Wieloplatformowy kalendarz pulpitu i integracja Asystenta Domowego z zegarem analogowym, obsługą wydarzeń, notatkami i świętami. Jeśli ci się podoba, kup mi kawę: [Link do darowizny](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇧🇷 Português (Brasil):** Calendário de desktop multiplataforma e integração Assistente Doméstico com relógio analógico, manipulação de eventos, anotações e feriados. Se você gosta, por favor me compre um café: [Link de doação](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇧🇷 Português (Brasil):** Calendário de desktop multiplataforma e integração Assistente Doméstico com relógio analógico, manipulação de eventos, anotações e feriados. Se você gosta, por favor me compre um café: [Link de doação](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇵🇹 Português (Portugal):** Calendário de desktop multiplataforma e integração Assistente Doméstico com relógio analógico, gestão de eventos, notas e feriados. Se gosta, por favor compre-me um café: [Link de doação](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇵🇹 Português (Portugal):** Calendário de desktop multiplataforma e integração Assistente Doméstico com relógio analógico, gestão de eventos, notas e feriados. Se gosta, por favor compre-me um café: [Link de doação](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇷🇴 Română:** Calendar desktop multiplatformă și integrare Asistent Casnic cu ceas analogic, gestionarea evenimentelor, luarea de notițe și sărbători. Dacă vă place, vă rog să-mi cumpărați o cafea: [Link donație](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇷🇴 Română:** Calendar desktop multiplatformă și integrare Asistent Casnic cu ceas analogic, gestionarea evenimentelor, luarea de notițe și sărbători. Dacă vă place, vă rog să-mi cumpărați o cafea: [Link donație](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇷🇺 Русский:** Кроссплатформенный настольный календарь и интеграция Домашнего Помощника с аналоговыми часами, обработкой событий, заметками и праздниками. Если вам нравится, пожалуйста, купите мне кофе: [Ссылка для пожертвования](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇷🇺 Русский:** Кроссплатформенный настольный календарь и интеграция Домашнего Помощника с аналоговыми часами, обработкой событий, заметками и праздниками. Если вам нравится, пожалуйста, купите мне кофе: [Ссылка для пожертвования](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇸🇰 Slovenčina:** Multiplatformový desktopový kalendár a integrácia Domáceho Asistenta s analógovými hodinami, správou udalostí, písaním poznámok a sviatkami. Ak sa vám páči, kúpte mi prosím kávu: [Odkaz na darovanie](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇸🇰 Slovenčina:** Multiplatformový desktopový kalendár a integrácia Domáceho Asistenta s analógovými hodinami, správou udalostí, písaním poznámok a sviatkami. Ak sa vám páči, kúpte mi prosím kávu: [Odkaz na darovanie](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇸🇮 Slovenščina:** Večplatformni namizni koledar in integracija Domačega Pomočnika z analogno uro, upravljanjem dogodkov, zapisovanjem in prazniki. Če vam je všeč, mi prosim kupite kavo: [Povezava za donacijo](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇸🇮 Slovenščina:** Večplatformni namizni koledar in integracija Domačega Pomočnika z analogno uro, upravljanjem dogodkov, zapisovanjem in prazniki. Če vam je všeč, mi prosim kupite kavo: [Povezava za donacijo](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇸🇪 Svenska:** Plattformsoberoende skrivbordskalender och Hemassistent-integration med analog klocka, händelsehantering, anteckningar och helgdagar. Om du gillar det, köp mig en kaffe: [Donationslänk](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇸🇪 Svenska:** Plattformsoberoende skrivbordskalender och Hemassistent-integration med analog klocka, händelsehantering, anteckningar och helgdagar. Om du gillar det, köp mig en kaffe: [Donationslänk](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇹🇭 ไทย:** ปฏิทินเดสก์ท็อปข้ามแพลตฟอร์มและการรวม Home Assistant ด้วยนาฬิกาแอนะล็อก การจัดการเหตุการณ์ การจดบันทึก และวันหยุด หากคุณชอบ กรุณาซื้อกาแฟให้ฉัน: [ลิงก์บริจาค](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇹🇭 ไทย:** ปฏิทินเดสก์ท็อปข้ามแพลตฟอร์มและการรวม Home Assistant ด้วยนาฬิกาแอนะล็อก การจัดการเหตุการณ์ การจดบันทึก และวันหยุด หากคุณชอบ กรุณาซื้อกาแฟให้ฉัน: [ลิงก์บริจาค](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇹🇷 Türkçe:** Çapraz platform masaüstü takvimi ve analog saat, olay işleme, not alma ve tatillerle Ev Asistanı entegrasyonu. Beğendiyseniz, lütfen bana bir kahve alın: [Bağış bağlantısı](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇹🇷 Türkçe:** Çapraz platform masaüstü takvimi ve analog saat, olay işleme, not alma ve tatillerle Ev Asistanı entegrasyonu. Beğendiyseniz, lütfen bana bir kahve alın: [Bağış bağlantısı](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇺🇦 Українська:** Кросплатформний настільний календар та інтеграція Домашнього Помічника з аналоговим годинником, обробкою подій, нотатками та святами. Якщо вам подобається, будь ласка, купіть мені каву: [Посилання для пожертви](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇺🇦 Українська:** Кросплатформний настільний календар та інтеграція Домашнього Помічника з аналоговим годинником, обробкою подій, нотатками та святами. Якщо вам подобається, будь ласка, купіть мені каву: [Посилання для пожертви](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇻🇳 Tiếng Việt:** Lịch máy tính để bàn đa nền tảng và tích hợp Trợ lý Gia đình với đồng hồ kim, xử lý sự kiện, ghi chú và ngày lễ. Nếu bạn thích, hãy mua cho tôi một ly cà phê: [Liên kết quyên góp](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇻🇳 Tiếng Việt:** Lịch máy tính để bàn đa nền tảng và tích hợp Trợ lý Gia đình với đồng hồ kim, xử lý sự kiện, ghi chú và ngày lễ. Nếu bạn thích, hãy mua cho tôi một ly cà phê: [Liên kết quyên góp](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇨🇳 简体中文:** 具有模拟时钟、事件处理、记笔记和节假日功能的跨平台桌面日历和家庭助手集成。如果您喜欢，请给我买杯咖啡: [捐赠链接](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇨🇳 简体中文:** 具有模拟时钟、事件处理、记笔记和节假日功能的跨平台桌面日历和家庭助手集成。如果您喜欢，请给我买杯咖啡: [捐赠链接](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
-**🇹🇼 繁體中文:** 具有類比時鐘、事件處理、記筆記和節假日功能的跨平台桌面日曆和家庭助理整合。如果您喜歡，請給我買杯咖啡: [捐贈連結](https://www.paypal.com/ncp/payment/UNU78VKKJ49SY)
+**🇹🇼 繁體中文:** 具有類比時鐘、事件處理、記筆記和節假日功能的跨平台桌面日曆和家庭助理整合。如果您喜歡，請給我買杯咖啡: [捐贈連結](https://www.paypal.com/ncp/payment/Z36XJEEA4MNV6)
 
 
 ---
