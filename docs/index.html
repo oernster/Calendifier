@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendifier: International Desktop Calendar with World Holidays</title>
+<meta name="description" content="Calendifier is a local-first desktop calendar with public holidays and cultural observances for 40 countries, an analog clock, events, notes and 13+ languages. Windows, macOS and Linux, with an optional Home Assistant web dashboard.">
+<meta name="keywords" content="desktop calendar, world holidays, public holidays, cultural observances, analog clock, events, notes, recurring events, internationalisation, Home Assistant, PySide6, Windows, macOS, Linux, local-first">
+<meta name="author" content="Oliver Ernster">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1a1a1a">
+<link rel="canonical" href="https://oernster.github.io/calendifier/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Calendifier">
+<meta property="og:title" content="Calendifier: International Desktop Calendar with World Holidays">
+<meta property="og:description" content="A local-first desktop calendar with holidays and cultural observances for 40 countries, an analog clock, events, notes and 13+ languages. Windows, macOS and Linux.">
+<meta property="og:url" content="https://oernster.github.io/calendifier/">
+<meta property="og:image" content="https://oernster.github.io/calendifier/assets/calendifier.png">
+<meta property="og:image:alt" content="The Calendifier application icon">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Calendifier: International Desktop Calendar with World Holidays">
+<meta name="twitter:description" content="A local-first desktop calendar with holidays and cultural observances for 40 countries, an analog clock, events, notes and 13+ languages.">
+<meta name="twitter:image" content="https://oernster.github.io/calendifier/assets/calendifier.png">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="stylesheet" href="styles.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Calendifier", "applicationCategory": "BusinessApplication", "operatingSystem": "Windows, macOS, Linux", "description": "Calendifier is a local-first desktop calendar with public holidays and cultural observances for 40 countries, an analog clock, events, notes and 13+ languages.", "url": "https://oernster.github.io/calendifier/", "image": "https://oernster.github.io/calendifier/assets/calendifier.png", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "GBP"}, "author": {"@type": "Person", "name": "Oliver Ernster", "url": "https://www.crankthecode.com/"}, "license": "https://www.gnu.org/licenses/lgpl-3.0.html"}</script>
+</head>
+<body>
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top">
+      <img src="assets/calendifier.png" alt="Calendifier icon">Calendifier</a>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/oernster/calendifier">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main id="top">
+  <section class="hero">
+    <div class="container">
+      <img class="logo" src="assets/calendifier.png" alt="Calendifier icon">
+      <h1>Calendifier</h1>
+      <div class="tagline">Desktop Calendar · World Holidays · Clock</div>
+      <p class="lede">A local-first desktop calendar that speaks your language and knows your
+        holidays. Public holidays and cultural observances for 40 countries, an analog
+        clock, events and notes, in one clean interface.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/oernster/calendifier/releases">Download</a>
+        <a class="btn btn-ghost" href="#features">See features</a>
+      </div>
+      <p class="release-note">Builds are published on the
+        <a href="https://github.com/oernster/calendifier/releases">releases page</a> as they ship.</p>
+      <div class="badges">
+        <span>Local-first</span>·<span>40 countries</span>
+        ·<span>13+ languages</span>·<span>LGPL-3.0</span>·<span>Windows · macOS · Linux</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="alt">
+    <div class="container">
+      <div class="eyebrow">What it does</div>
+      <h2 class="section-title">A calendar that knows the whole world's dates</h2>
+      <p class="section-sub">Calendifier brings international holidays, your own events and
+        the time of day together, in your own language and on your own machine.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="fnum">01</div>
+          <h3>Holidays and observances</h3>
+          <p>Far more than your own country's bank holidays.</p>
+          <ul>
+            <li>Public holidays for 40 countries</li>
+            <li>Cultural observances on top of the official days</li>
+            <li>Countries shown in their native names (Deutschland, 日本, Catalunya)</li>
+            <li>Holiday region is independent of the interface language</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <div class="fnum">02</div>
+          <h3>Calendar, events and notes</h3>
+          <p>The day-to-day, kept simple and predictable.</p>
+          <ul>
+            <li>Month calendar with your events and notes</li>
+            <li>Recurring events via standard RRULE rules</li>
+            <li>Notes kept in a clean sequential order</li>
+            <li>Import and export so your data stays yours</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <div class="fnum">03</div>
+          <h3>Analog clock and accurate time</h3>
+          <p>The time of day, shown well and kept correct.</p>
+          <ul>
+            <li>An analog clock that scales to its space</li>
+            <li>Network time synchronisation</li>
+            <li>Timezone-aware throughout</li>
+            <li>Dark and light themes</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <div class="fnum">04</div>
+          <h3>Your languages, your machine</h3>
+          <p>Internationalised to the core and local-first.</p>
+          <ul>
+            <li>13+ languages with native number and date formatting</li>
+            <li>Local SQLite storage, no account and no cloud</li>
+            <li>An optional Home Assistant web dashboard</li>
+            <li>Native installers for every platform</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screenshots">
+    <div class="container">
+      <div class="eyebrow">A look inside</div>
+      <h2 class="section-title">See it in action</h2>
+      <p class="section-sub">The calendar, the world's holidays and the clock, in a clean
+        themed interface.</p>
+      <div class="shots">
+        <figure class="shot">
+          <div class="frame">
+            <div class="bar"><i></i><i></i><i></i></div>
+            <img loading="lazy" src="assets/screenshots/calendifier.png" alt="Calendifier main window: month calendar, analog clock, events, notes and the country and language selectors">
+          </div>
+          <figcaption><b>The main window.</b> The month calendar carrying the day's events
+            alongside holidays and observances, the analog clock with network-synced time, a
+            sticky note and the country and language selectors, all in the dark theme.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="download" class="alt">
+    <div class="container">
+      <div class="eyebrow">Get Calendifier</div>
+      <h2 class="section-title">Install on your platform</h2>
+      <p class="section-sub">Grab a build from the
+        <a href="https://github.com/oernster/calendifier/releases">releases page</a>, or build
+        from source with the
+        <a href="https://github.com/oernster/calendifier/blob/main/DEVELOPMENT-README.md">development guide</a>.
+        A Home Assistant web dashboard is available for running it in your smart home.</p>
+      <div class="downloads">
+        <div class="dl-card">
+          <div class="os">Windows</div>
+          <h3>Per-user installer</h3>
+          <p>A graphical installer that needs no administrator rights, registers a normal
+            uninstall entry and adds shortcuts.</p>
+          <code>CalendifierSetup.exe</code>
+          <a class="btn btn-primary" href="https://github.com/oernster/calendifier/releases">Download for Windows</a>
+        </div>
+        <div class="dl-card">
+          <div class="os">macOS</div>
+          <h3>Disk image</h3>
+          <p>A self-contained app bundle delivered as a drag-to-install disk image.</p>
+          <code>calendifier.dmg</code>
+          <a class="btn btn-primary" href="https://github.com/oernster/calendifier/releases">Download for macOS</a>
+        </div>
+        <div class="dl-card">
+          <div class="os">Linux</div>
+          <h3>Flatpak</h3>
+          <p>A Flatpak bundle for the KDE runtime that runs on any modern desktop.</p>
+          <code>flatpak install --user calendifier.flatpak</code>
+          <a class="btn btn-primary" href="https://github.com/oernster/calendifier/releases">Download for Linux</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer>
+  <div class="container footer-inner">
+    <div>
+      <strong>Calendifier</strong>: international desktop calendar with world holidays<br>
+      (c) 2026 Oliver Ernster · Local-first · LGPL-3.0 · v<!--VERSION-->1.7.0<!--/VERSION-->
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/oernster/calendifier/releases">Releases</a>
+      <a href="https://github.com/oernster/calendifier">GitHub</a>
+      <a href="https://www.crankthecode.com/">crankthecode.com</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
