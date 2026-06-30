@@ -1,4 +1,4 @@
-# <img width="32" height="32" alt="calendifier" src="https://github.com/user-attachments/assets/84c2e298-8a53-4ea3-869b-7d154cee3ca8" /> Calendifier
+# <img width="64" height="64" alt="calendifier" src="https://github.com/user-attachments/assets/84c2e298-8a53-4ea3-869b-7d154cee3ca8" /> Calendifier
 
 **Author: Oliver Ernster**
 
