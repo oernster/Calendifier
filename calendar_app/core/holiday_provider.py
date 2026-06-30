@@ -5,8 +5,8 @@ This module provides UK holiday data and integration.
 """
 
 import logging
-from datetime import date, datetime
-from typing import List, Dict, Optional, Set
+from datetime import date
+from typing import List, Dict, Optional
 from calendar_app.data.models import Holiday
 
 logger = logging.getLogger(__name__)

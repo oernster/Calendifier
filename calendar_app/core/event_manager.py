@@ -8,7 +8,7 @@ import logging
 import json
 from pathlib import Path
 from datetime import date, datetime, time
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Union
 from calendar_app.data.database import DatabaseManager
 from calendar_app.data.models import Event
 from version import EVENT_CATEGORY_EMOJIS
@@ -102,7 +102,8 @@ class EventManager:
                 else:
                     current_date = current_date.replace(month=current_date.month + 1)
 
-            # Filter events to only include those that actually fall within the date range
+            # Filter events to only include those that actually fall within
+            # the date range
             filtered_events = []
             for event in all_events:
                 if event.start_date and start_date <= event.start_date <= end_date:
@@ -112,7 +113,8 @@ class EventManager:
             unique_events = []
             seen_ids = set()
             for event in filtered_events:
-                # CRITICAL FIX: Use recurrence_id for recurring occurrences to properly deduplicate
+                # CRITICAL FIX: Use recurrence_id for recurring occurrences
+                # to properly deduplicate
                 if hasattr(event, "recurrence_id") and event.recurrence_id:
                     # Use recurrence_id for recurring occurrences
                     event_key = event.recurrence_id
@@ -120,7 +122,8 @@ class EventManager:
                     # Use regular ID for non-recurring events
                     event_key = (event.id, event.start_date)
                 else:
-                    # Fallback for events without ID (shouldn't happen for non-recurring)
+                    # Fallback for events without ID
+                    # (shouldn't happen for non-recurring)
                     event_key = (id(event), event.start_date)
 
                 if event_key not in seen_ids:
@@ -128,7 +131,7 @@ class EventManager:
                     seen_ids.add(event_key)
 
             logger.debug(
-                f"📅 Found {len(unique_events)} events for range {start_date} to {end_date}"
+                f"📅 Found {len(unique_events)} events for range {start_date} to {end_date}"  # noqa: E501
             )
             return unique_events
         except Exception as e:
@@ -144,7 +147,9 @@ class EventManager:
             if success:
                 logger.info(f"✅ Updated event: {event.get_display_title()}")
             else:
-                logger.warning(f"⚠️ Failed to update event: {event.get_display_title()}")
+                logger.warning(
+                    f"⚠️ Failed to update event: {event.get_display_title()}"
+                )
             return success
         except Exception as e:
             logger.error(f"❌ Failed to update event: {e}")
@@ -221,11 +226,11 @@ class EventManager:
             )
             if success:
                 logger.info(
-                    f"✅ Added exception date {exception_date} to event ID {master_event_id}"
+                    f"✅ Added exception date {exception_date} to event ID {master_event_id}"  # noqa: E501
                 )
             else:
                 logger.warning(
-                    f"⚠️ Failed to add exception date {exception_date} to event ID {master_event_id}"
+                    f"⚠️ Failed to add exception date {exception_date} to event ID {master_event_id}"  # noqa: E501
                 )
             return success
         except Exception as e:
@@ -240,11 +245,11 @@ class EventManager:
             )
             if success:
                 logger.info(
-                    f"✅ Removed exception date {exception_date} from event ID {master_event_id}"
+                    f"✅ Removed exception date {exception_date} from event ID {master_event_id}"  # noqa: E501
                 )
             else:
                 logger.warning(
-                    f"⚠️ Failed to remove exception date {exception_date} from event ID {master_event_id}"
+                    f"⚠️ Failed to remove exception date {exception_date} from event ID {master_event_id}"  # noqa: E501
                 )
             return success
         except Exception as e:

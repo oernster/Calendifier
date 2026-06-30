@@ -5,16 +5,20 @@ This module handles SQLite database operations with proper schema management.
 Enhanced with RRULE support for RFC 5545 compliant recurring events.
 """
 
+# E501 is suppressed file-wide: the long lines are inside multi-line SQL string
+# literals (and single-string log messages) that cannot be wrapped without
+# altering query/string contents, and cannot carry an inline noqa.
+# flake8: noqa: E501
+
 import sqlite3
 import logging
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Tuple
-from datetime import date, time, datetime
+from typing import List, Optional
+from datetime import date, datetime
 from contextlib import contextmanager
 
-from .models import Event, AppSettings
+from .models import Event
 from ..core.recurring_event_generator import RecurringEventGenerator
-from ..core.rrule_parser import RRuleParser
 
 logger = logging.getLogger(__name__)
 
@@ -34,14 +38,12 @@ class DatabaseManager:
         """🚀 Initialize database with schema."""
         with self.get_connection() as conn:
             # Create schema version table
-            conn.execute(
-                """
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS schema_version (
                     version INTEGER PRIMARY KEY,
                     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """
-            )
+            """)
 
             # Check current schema version
             current_version = self._get_schema_version(conn)
@@ -76,8 +78,7 @@ class DatabaseManager:
         """🏗️ Create initial database schema."""
 
         # Events table
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
@@ -101,8 +102,7 @@ class DatabaseManager:
                     (end_time >= start_time)
                 )
             )
-        """
-        )
+        """)
 
         # Create indexes for performance
         conn.execute("CREATE INDEX idx_events_start_date ON events(start_date)")
@@ -113,8 +113,7 @@ class DatabaseManager:
         )
 
         # Settings table
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE settings (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL,
@@ -122,12 +121,10 @@ class DatabaseManager:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         # Event categories table
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE event_categories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE NOT NULL,
@@ -136,8 +133,7 @@ class DatabaseManager:
                 is_system BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         # Insert default categories
         default_categories = [
@@ -232,8 +228,7 @@ class DatabaseManager:
 
         # Add foreign key constraint for recurrence master
         try:
-            conn.execute(
-                """
+            conn.execute("""
                 CREATE TRIGGER fk_recurrence_master_id
                 BEFORE INSERT ON events
                 FOR EACH ROW
@@ -244,8 +239,7 @@ class DatabaseManager:
                         THEN RAISE(ABORT, 'Foreign key constraint failed: recurrence_master_id')
                     END;
                 END
-            """
-            )
+            """)
             logger.info("✅ Created recurrence master foreign key trigger")
         except sqlite3.OperationalError:
             logger.info("ℹ️ Recurrence master trigger already exists")
@@ -464,7 +458,7 @@ class DatabaseManager:
                     # Non-recurring events should be added normally
                     events.append(event)
 
-            logger.info(f"📆 Total events for {year}-{month:02d}: {len(events)}")
+            logger.debug(f"📆 Total events for {year}-{month:02d}: {len(events)}")
             return events
 
     def update_event(self, event: Event) -> bool:
@@ -637,10 +631,10 @@ class DatabaseManager:
         if not base_event.is_recurring:
             return []
 
-        logger.info(
+        logger.debug(
             f"🔄 Generating recurring events for {base_event.id} ({base_event.title}) from {start_date} to {end_date}"
         )
-        logger.info(
+        logger.debug(
             f"🔄 Base event start_date: {base_event.start_date}, rrule: {base_event.rrule}"
         )
 
@@ -805,14 +799,12 @@ class DatabaseManager:
     def get_recurring_master_events(self) -> List[Event]:
         """🔄 Get all master recurring events (events with RRULE but no recurrence_master_id)."""
         with self.get_connection() as conn:
-            cursor = conn.execute(
-                """
+            cursor = conn.execute("""
                 SELECT * FROM events
                 WHERE is_recurring = 1
                 AND (recurrence_master_id IS NULL OR recurrence_master_id = 0)
                 ORDER BY start_date, start_time
-            """
-            )
+            """)
 
             return [self._row_to_event(row) for row in cursor.fetchall()]
 

@@ -5,8 +5,6 @@ Custom UI widgets that display numbers in native numeral systems
 
 import logging
 from PySide6.QtWidgets import QSpinBox, QLineEdit
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QValidator
 
 logger = logging.getLogger(__name__)
 

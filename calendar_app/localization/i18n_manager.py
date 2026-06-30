@@ -7,12 +7,9 @@ runtime language switching.
 """
 
 import json
-import os
-import locale
 import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
-from functools import lru_cache
 from datetime import date, datetime
 from .number_formatter import NumberFormatter
 
@@ -36,10 +33,12 @@ class I18nManager:
     def _detect_system_locale(self) -> str:
         """Detect system locale automatically"""
         try:
-            import locale as system_locale
+            from calendar_app.localization.locale_detector import (
+                get_environment_locale,
+            )
 
-            # Get system locale
-            loc = system_locale.getdefaultlocale()[0]
+            # Get system locale from the environment (non-deprecated)
+            loc = get_environment_locale()
             if loc:
                 # Convert from locale format (en_US) to our format
                 return loc.replace("-", "_")

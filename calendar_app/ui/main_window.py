@@ -5,9 +5,10 @@ This module contains the main application window with layout and component integ
 """
 
 import logging
+import sys
+from pathlib import Path
 from typing import Optional
 
-logger = logging.getLogger(__name__)
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -15,14 +16,13 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QSplitter,
     QStatusBar,
-    QMenuBar,
-    QMenu,
     QMessageBox,
     QComboBox,
     QLabel,
     QDialog,
+    QScrollArea,
 )
-from PySide6.QtCore import Qt, QTimer, Signal, QSize
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QIcon, QPixmap, QPainter, QFont
 
 from calendar_app.ui.clock_widget import ClockWidget
@@ -33,8 +33,9 @@ from calendar_app.ui.settings_dialog import SettingsDialog
 from calendar_app.ui.about_dialog import AboutDialog
 from calendar_app.config.themes import ThemeManager
 from calendar_app.config.settings import SettingsManager
-from calendar_app.localization import LocaleDetector, set_locale
+from calendar_app.localization import LocaleDetector
 from calendar_app.localization.i18n_manager import get_i18n_manager
+from calendar_app.shared.resources import find_qt_window_icon_path
 
 
 def _(key: str, **kwargs) -> str:
@@ -47,14 +48,20 @@ def _(key: str, **kwargs) -> str:
         if result == key and default != key:
             return default
         return result
-    except Exception as e:
+    except Exception:
         # Fallback to default or key if translation fails
         return kwargs.get("default", key)
 
 
-from version import get_version_string, get_about_text, APP_ICON, UI_EMOJIS
+from version import get_version_string, APP_ICON, UI_EMOJIS  # noqa: E402
 
 logger = logging.getLogger(__name__)
+
+# Horizontal gap (px) between the floating country and language selectors.
+SELECTOR_GAP = 6
+
+# Size (px) of the application icon shown at the top of the left panel.
+FRONT_PAGE_ICON_PX = 56
 
 
 class MainWindow(QMainWindow):
@@ -98,6 +105,9 @@ class MainWindow(QMainWindow):
         # Create floating language selector in top right
         self._create_floating_language_selector()
 
+        # Create floating holiday-country selector to its left
+        self._create_floating_country_selector()
+
         # Force all widgets to use correct locale
         self._force_initial_localization()
 
@@ -109,8 +119,8 @@ class MainWindow(QMainWindow):
             _("main_window_title", version=get_version_string().split("v")[1])
         )
         # Set window size optimized for 13" MacBook screens (1440x900 effective space)
-        # Left panel: 320px + Right panel: 620px (scaled calendar) + Main layout margins: 16px = 956px width
-        # Calendar height: 390px + header: 50px + event panel: 200px + margins: 120px = 760px minimum height
+        # Left panel: 320px + Right panel: 620px (scaled calendar) + Main layout margins: 16px = 956px width  # noqa: E501
+        # Calendar height: 390px + header: 50px + event panel: 200px + margins: 120px = 760px minimum height  # noqa: E501
         self.setMinimumSize(956, 760)
         self.setMaximumSize(956, 16777215)  # Fixed width, flexible height
 
@@ -138,9 +148,32 @@ class MainWindow(QMainWindow):
 
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
+    def _icon_file_candidates(self) -> list:
+        """📅 Possible locations of the window-icon file (dev and bundled)."""
+        # Windows prefers the multi-size .ico; the PNG is the portable fallback.
+        names = ["calendar_icon.ico", "calendar_icon.png"]
+        roots = []
+
+        # PyInstaller/Nuitka onefile unpack dir, if running frozen.
+        bundle_dir = getattr(sys, "_MEIPASS", None)
+        if bundle_dir:
+            roots.append(Path(bundle_dir))
+
+        # Repo root in a normal source checkout (.../calendar_app/ui/main_window.py).
+        roots.append(Path(__file__).resolve().parents[2])
+
+        return [root / "assets" / name for root in roots for name in names]
+
     def _create_app_icon(self):
-        """📅 Create application icon from emoji."""
+        """📅 Set the window icon from the bundled icon file (emoji fallback)."""
         try:
+            # Prefer the real icon artwork; fall back to the emoji render below.
+            for candidate in self._icon_file_candidates():
+                if candidate.exists():
+                    self.setWindowIcon(QIcon(str(candidate)))
+                    logger.debug(f"📅 Window icon loaded from: {candidate}")
+                    return
+
             # Create multiple sizes for better icon quality
             sizes = [16, 24, 32, 48, 64, 128]
             icon = QIcon()
@@ -159,7 +192,7 @@ class MainWindow(QMainWindow):
                     from calendar_app.utils.font_manager import get_emoji_font
 
                     font = get_emoji_font(int(size * 0.8))
-                except:
+                except Exception:
                     # Fallback to system emoji font
                     font = QFont()
                     font.setFamily("Segoe UI Emoji")  # Windows emoji font
@@ -188,7 +221,7 @@ class MainWindow(QMainWindow):
         if platform.system() == "Darwin":  # macOS
             menubar.setNativeMenuBar(True)
             print(
-                "🍎 Enabled native menu bar - relying on Objective-C wrapper for correct process name"
+                "🍎 Enabled native menu bar - relying on Objective-C wrapper for correct process name"  # noqa: E501
             )
 
         # File menu
@@ -408,8 +441,7 @@ class MainWindow(QMainWindow):
         language_layout.addWidget(self.language_combo)
 
         # Style the floating widget with reduced borders for menu bar fit
-        self.language_widget.setStyleSheet(
-            """
+        self.language_widget.setStyleSheet("""
             QWidget#floating_language_selector {
                 background-color: rgba(50, 50, 50, 200);
                 border: 1px solid #666;
@@ -420,8 +452,7 @@ class MainWindow(QMainWindow):
                 border: 1px solid #666;
                 border-radius: 2px;
             }
-        """
-        )
+        """)
 
         # Position in top right corner
         self._position_language_selector()
@@ -429,6 +460,109 @@ class MainWindow(QMainWindow):
         # Show the widget
         self.language_widget.show()
         self.language_widget.raise_()  # Bring to front
+
+    def _create_floating_country_selector(self):
+        """🌍 Create floating holiday-country selector left of the language one."""
+        from calendar_app.core.multi_country_holiday_provider import (
+            MultiCountryHolidayProvider,
+        )
+
+        self.country_widget = QWidget(self)
+        self.country_widget.setObjectName("floating_country_selector")
+
+        country_layout = QHBoxLayout(self.country_widget)
+        country_layout.setContentsMargins(4, 2, 4, 2)
+        country_layout.setSpacing(3)
+
+        # Holidays label (calendar icon distinguishes it from the language globe)
+        country_label = QLabel("📅")
+        country_label.setToolTip(_("label_holiday_country", default="Public holidays"))
+        country_layout.addWidget(country_label)
+
+        self.country_combo = QComboBox()
+        self.country_combo.setMinimumWidth(170)
+        self.country_combo.setMaximumWidth(200)
+        self.country_combo.setMaximumHeight(22)
+        self.country_combo.setToolTip(
+            _("label_holiday_country", default="Public holidays")
+        )
+
+        # Auto (from timezone) first, then every supported country
+        self.country_combo.addItem(
+            f"🌍 {_('holiday_country_auto', default='Auto (from timezone)')}",
+            MultiCountryHolidayProvider.AUTO_COUNTRY,
+        )
+        self.country_combo.insertSeparator(1)
+        for country_code, info in MultiCountryHolidayProvider.get_sorted_countries():
+            self.country_combo.addItem(f"{info['flag']} {info['name']}", country_code)
+
+        self.country_combo.setMaxVisibleItems(15)
+        self.country_combo.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        country_list_view = self.country_combo.view()
+        country_list_view.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+        )
+        country_list_view.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+
+        # Reflect the saved setting ("auto" or a country code)
+        self._sync_country_selector()
+
+        self.country_combo.currentIndexChanged.connect(self._on_holiday_country_changed)
+        country_layout.addWidget(self.country_combo)
+
+        # Match the language selector's styling
+        self.country_widget.setStyleSheet("""
+            QWidget#floating_country_selector {
+                background-color: rgba(50, 50, 50, 200);
+                border: 1px solid #666;
+                border-radius: 2px;
+            }
+            QComboBox {
+                padding: 1px 4px;
+                border: 1px solid #666;
+                border-radius: 2px;
+            }
+        """)
+
+        self._position_language_selector()
+        self.country_widget.show()
+        self.country_widget.raise_()
+
+    def _sync_country_selector(self):
+        """🔄 Point the floating country combo at the saved holiday setting."""
+        if not hasattr(self, "country_combo"):
+            return
+        current = self.settings_manager.get_holiday_country()
+        index = self.country_combo.findData(current)
+        if index >= 0:
+            blocked = self.country_combo.blockSignals(True)
+            self.country_combo.setCurrentIndex(index)
+            self.country_combo.blockSignals(blocked)
+
+    def _on_holiday_country_changed(self, _index: int):
+        """🌍 Apply a holiday-country choice made from the top-bar selector."""
+        try:
+            country = self.country_combo.currentData()
+            if not country:
+                return
+
+            self.settings_manager.set_holiday_country(country)
+
+            # Resolve "auto" through the timezone, then apply to the calendar
+            effective = self.settings_manager.get_effective_holiday_country()
+            if hasattr(self, "holiday_provider") and self.holiday_provider:
+                self.holiday_provider.set_country(effective)
+            if self.calendar_widget:
+                self.calendar_widget.set_holiday_country(effective)
+                self.calendar_widget.refresh_calendar()
+
+            self.status_bar.showMessage(
+                _("status_settings_updated", default="Settings updated"), 2000
+            )
+        except Exception as e:
+            logger.error(f"❌ Failed to change holiday country: {e}")
 
     def _refresh_language_selector(self):
         """🔄 Refresh language selector with translated names."""
@@ -465,7 +599,7 @@ class MainWindow(QMainWindow):
             self.language_combo.currentIndexChanged.connect(self._on_language_changed)
 
             logger.debug(
-                "🔄 Language selector refreshed with translated names and scroll settings"
+                "🔄 Language selector refreshed with translated names and scroll settings"  # noqa: E501
             )
 
         except Exception as e:
@@ -475,7 +609,7 @@ class MainWindow(QMainWindow):
                 self.language_combo.currentIndexChanged.connect(
                     self._on_language_changed
                 )
-            except:
+            except Exception:
                 pass
 
     def _on_language_changed(self):
@@ -509,7 +643,7 @@ class MainWindow(QMainWindow):
                     from calendar_app.localization.i18n_manager import get_i18n_manager
                     from calendar_app.localization import set_locale
 
-                    # Use the proper set_locale function which updates the global manager
+                    # Use the proper set_locale function which updates the global manager  # noqa: E501
                     set_locale(selected_locale)
 
                     # Get the manager and force complete reload
@@ -520,24 +654,19 @@ class MainWindow(QMainWindow):
                     )  # Force reload the new locale
                     i18n_manager._set_system_locale()
 
-                    # Update holiday country if needed
-                    locale_country = LocaleDetector.get_country_from_locale(
-                        selected_locale
+                    # Re-apply the effective holiday region. The region follows
+                    # the timezone/explicit selector, NOT the UI language, so a
+                    # language change must not override the user's chosen country.
+                    # It is re-resolved only because "auto" can fall back to the
+                    # locale's country when the timezone is not mappable.
+                    effective_country = (
+                        self.settings_manager.get_effective_holiday_country()
                     )
-                    current_holiday_country = (
-                        self.settings_manager.get_holiday_country()
-                    )
-                    if (
-                        current_holiday_country == "GB"
-                        or current_holiday_country != locale_country
-                    ):
-                        self.settings_manager.set_holiday_country(locale_country)
-                        # Update holiday provider and calendar
-                        if hasattr(self, "holiday_provider") and self.holiday_provider:
-                            self.holiday_provider.set_country(locale_country)
-                        if self.calendar_widget:
-                            self.calendar_widget.set_holiday_country(locale_country)
-                            self.calendar_widget.refresh_calendar()
+                    if hasattr(self, "holiday_provider") and self.holiday_provider:
+                        self.holiday_provider.set_country(effective_country)
+                    if self.calendar_widget:
+                        self.calendar_widget.set_holiday_country(effective_country)
+                        self.calendar_widget.refresh_calendar()
 
                     # CRITICAL FIX: Refresh holiday translations for the new locale
                     # This ensures holidays are displayed in the correct language
@@ -554,7 +683,7 @@ class MainWindow(QMainWindow):
                         if self.calendar_widget.holiday_provider:
                             self.calendar_widget.holiday_provider.force_locale_refresh()
                             logger.debug(
-                                "🌍 Calendar widget holiday provider forced locale refresh"
+                                "🌍 Calendar widget holiday provider forced locale refresh"  # noqa: E501
                             )
 
                     # Force calendar refresh to show translated holidays
@@ -572,7 +701,7 @@ class MainWindow(QMainWindow):
                     locale_info = LocaleDetector.get_locale_info(selected_locale)
                     if locale_info:
                         self.status_bar.showMessage(
-                            f"🌍 {_('status_language_changed', language=locale_info['name'], default='Language changed to {language}')}",
+                            f"🌍 {_('status_language_changed', language=locale_info['name'], default='Language changed to {language}')}",  # noqa: E501
                             3000,
                         )
 
@@ -594,7 +723,7 @@ class MainWindow(QMainWindow):
             self._changing_language = False
 
     def _force_complete_ui_refresh(self):
-        """🔄 Force complete UI refresh after language change using standardized pattern."""
+        """🔄 Force complete UI refresh after language change using standardized pattern."""  # noqa: E501
         try:
             from PySide6.QtCore import QCoreApplication
 
@@ -619,7 +748,7 @@ class MainWindow(QMainWindow):
                 self.language_combo.setToolTip(_("label_language", default="Language"))
                 self._refresh_language_selector()
 
-            # Step 5: STANDARDIZED WIDGET REFRESH - Call refresh_ui_text() on all widgets
+            # Step 5: STANDARDIZED WIDGET REFRESH - Call refresh_ui_text() on all widgets  # noqa: E501
             logger.debug("🔄 Calling standardized refresh methods on all widgets...")
 
             # Clock widget - use standardized refresh method
@@ -656,21 +785,21 @@ class MainWindow(QMainWindow):
             self.update()
             self.repaint()
 
-            # Step 8: Refresh existing dialogs or close them to ensure they use new language
+            # Step 8: Refresh existing dialogs or close them to ensure they use new language  # noqa: E501
             if self.settings_dialog and hasattr(
                 self.settings_dialog, "refresh_ui_text"
             ):
                 logger.debug("🔄 Refreshing settings dialog...")
                 self.settings_dialog.refresh_ui_text()
 
-            # Close about dialog if open - it will be recreated with correct language when reopened
+            # Close about dialog if open - it will be recreated with correct language when reopened  # noqa: E501
             if self.about_dialog and self.about_dialog.isVisible():
                 logger.debug("🔄 Closing about dialog to avoid layout conflicts...")
                 self.about_dialog.close()
                 self.about_dialog = None
 
             # Also refresh any event dialogs that might be open
-            # Note: Event dialogs are typically modal and short-lived, but we should handle them
+            # Note: Event dialogs are typically modal and short-lived, but we should handle them  # noqa: E501
             for child in self.findChildren(QDialog):
                 if hasattr(child, "refresh_ui_text") and child.isVisible():
                     logger.debug(f"🔄 Refreshing dialog: {child.__class__.__name__}")
@@ -717,12 +846,23 @@ class MainWindow(QMainWindow):
 
     def _create_left_panel(self) -> QWidget:
         """🕐 Create left panel with clock and notes."""
-        left_panel = QWidget()
-        left_panel.setFixedWidth(320)
+        content = QWidget()
 
-        layout = QVBoxLayout(left_panel)
+        layout = QVBoxLayout(content)
         layout.setSpacing(16)
         layout.setContentsMargins(8, 8, 8, 8)
+
+        # Application icon at the top of the front page.
+        icon_label = QLabel()
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_path = find_qt_window_icon_path()
+        if icon_path is not None:
+            pixmap = QIcon(str(icon_path)).pixmap(
+                FRONT_PAGE_ICON_PX, FRONT_PAGE_ICON_PX
+            )
+            if not pixmap.isNull():
+                icon_label.setPixmap(pixmap)
+        layout.addWidget(icon_label, 0)
 
         # Clock widget - give it more space to ensure buttons are visible
         self.clock_widget = ClockWidget()
@@ -732,7 +872,20 @@ class MainWindow(QMainWindow):
         self.notes_widget = NotesWidget()
         layout.addWidget(self.notes_widget, 2)
 
-        return left_panel
+        # Wrap in a scroll area so the clock/text never overlap on short
+        # screens (13" Linux/macOS): the column keeps its minimum size and a
+        # vertical scrollbar appears only when the viewport is too short.
+        scroll = QScrollArea()
+        scroll.setFixedWidth(320)
+        scroll.setWidget(content)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll.viewport().setAutoFillBackground(False)
+        content.setAutoFillBackground(False)
+
+        return scroll
 
     def _create_right_panel(self) -> QWidget:
         """📅 Create right panel with calendar and events."""
@@ -762,7 +915,7 @@ class MainWindow(QMainWindow):
             # Connect calendar date selection to event panel
             def debug_date_selected(selected_date):
                 logger.debug(
-                    f"📅 DEBUG: Main window received date_selected signal for: {selected_date}"
+                    f"📅 DEBUG: Main window received date_selected signal for: {selected_date}"  # noqa: E501
                 )
                 self.event_panel.show_events_for_date(selected_date)
 
@@ -827,7 +980,7 @@ class MainWindow(QMainWindow):
             # Always center on screen for optimal positioning
             self._center_on_screen()
 
-            logger.debug(f"🖥️ Restored window geometry and centered on screen")
+            logger.debug("🖥️ Restored window geometry and centered on screen")
 
         except Exception as e:
             logger.warning(f"⚠️ Failed to restore geometry: {e}")
@@ -868,7 +1021,7 @@ class MainWindow(QMainWindow):
         if self.theme_manager.set_theme(theme_name):
             self.settings_manager.set_theme(theme_name)
 
-            # Apply the theme (this will update both menu items and clock widget controls)
+            # Apply the theme (this will update both menu items and clock widget controls)  # noqa: E501
             self._apply_theme()
 
             self.theme_changed.emit(theme_name)
@@ -892,7 +1045,7 @@ class MainWindow(QMainWindow):
                 self,
                 _("import_events", default="Import Events"),
                 "",
-                "iCalendar Files (*.ics);;CSV Files (*.csv);;JSON Files (*.json);;All Files (*.*)",
+                "iCalendar Files (*.ics);;CSV Files (*.csv);;JSON Files (*.json);;All Files (*.*)",  # noqa: E501
             )
 
             if file_path:
@@ -900,15 +1053,15 @@ class MainWindow(QMainWindow):
                 # TODO: Implement actual import functionality
                 QMessageBox.information(
                     self,
-                    f"{UI_EMOJIS['import']} {_('import_events', default='Import Events')}",
-                    f"{_('import_success', count=0, default='Successfully imported 0 items')}\n\n{_('file_not_found', file=file_path, default='Selected file: {file}')}",
+                    f"{UI_EMOJIS['import']} {_('import_events', default='Import Events')}",  # noqa: E501
+                    f"{_('import_success', count=0, default='Successfully imported 0 items')}\n\n{_('file_not_found', file=file_path, default='Selected file: {file}')}",  # noqa: E501
                 )
 
         except Exception as e:
             QMessageBox.critical(
                 self,
                 _("error_title", default="Error"),
-                f"{_('import_error', error=str(e), default='Error importing file: {error}')}",
+                f"{_('import_error', error=str(e), default='Error importing file: {error}')}",  # noqa: E501
             )
 
     def _export_events(self):
@@ -921,7 +1074,7 @@ class MainWindow(QMainWindow):
                 self,
                 _("export_events", default="Export Events"),
                 "calendar_export.ics",
-                "iCalendar Files (*.ics);;CSV Files (*.csv);;JSON Files (*.json);;All Files (*.*)",
+                "iCalendar Files (*.ics);;CSV Files (*.csv);;JSON Files (*.json);;All Files (*.*)",  # noqa: E501
             )
 
             if file_path:
@@ -929,15 +1082,15 @@ class MainWindow(QMainWindow):
                 # TODO: Implement actual export functionality
                 QMessageBox.information(
                     self,
-                    f"{UI_EMOJIS['export']} {_('export_events', default='Export Events')}",
-                    f"{_('export_success', count=0, file=file_path, default='Successfully exported 0 items to {file}')}",
+                    f"{UI_EMOJIS['export']} {_('export_events', default='Export Events')}",  # noqa: E501
+                    f"{_('export_success', count=0, file=file_path, default='Successfully exported 0 items to {file}')}",  # noqa: E501
                 )
 
         except Exception as e:
             QMessageBox.critical(
                 self,
                 _("error_title", default="Error"),
-                f"{_('export_error', error=str(e), default='Error exporting file: {error}')}",
+                f"{_('export_error', error=str(e), default='Error exporting file: {error}')}",  # noqa: E501
             )
 
     def _open_settings(self):
@@ -987,13 +1140,15 @@ class MainWindow(QMainWindow):
             )
 
             # Update show week numbers setting
-            show_week_numbers = calendar_settings["show_week_numbers"]
             # Week numbers are always enabled - no need to set
-            logger.debug(f"📊 Week numbers are always enabled")
+            logger.debug("📊 Week numbers are always enabled")
 
-            # Update holiday country
-            holiday_country = calendar_settings.get("holiday_country", "GB")
+            # Update holiday country (resolves "auto" from the timezone)
+            holiday_country = self.settings_manager.get_effective_holiday_country()
             self.calendar_widget.set_holiday_country(holiday_country)
+
+            # Keep the top-bar country selector in step with the Settings change
+            self._sync_country_selector()
 
             # Refresh calendar to show new holidays
             self.calendar_widget.refresh_calendar()
@@ -1044,7 +1199,7 @@ class MainWindow(QMainWindow):
             self._position_language_selector()
 
     def _position_language_selector(self):
-        """Position the floating language selector below the menu bar to avoid truncation."""
+        """Position the floating language selector below the menu bar to avoid truncation."""  # noqa: E501
         if hasattr(self, "language_widget") and self.language_widget:
             # Get window size
             window_width = self.width()
@@ -1063,6 +1218,14 @@ class MainWindow(QMainWindow):
             self.language_widget.move(x, y)
             self.language_widget.resize(widget_size)
             self.language_widget.raise_()  # Ensure it's on top
+
+            # Place the holiday-country selector just to the left of it
+            if hasattr(self, "country_widget") and self.country_widget:
+                country_size = self.country_widget.sizeHint()
+                country_x = x - country_size.width() - SELECTOR_GAP
+                self.country_widget.move(country_x, y)
+                self.country_widget.resize(country_size)
+                self.country_widget.raise_()
 
     # Public methods
 
@@ -1110,12 +1273,11 @@ class MainWindow(QMainWindow):
                 calendar_settings["first_day_of_week"]
             )
 
-            show_week_numbers = calendar_settings["show_week_numbers"]
             # Week numbers are always enabled - no need to set
-            logger.debug(f"📊 Week numbers are always enabled")
+            logger.debug("📊 Week numbers are always enabled")
 
             self.calendar_widget.set_holiday_country(
-                calendar_settings.get("holiday_country", "GB")
+                self.settings_manager.get_effective_holiday_country()
             )
 
             logger.debug("✅ Calendar manager injected and initial settings applied")

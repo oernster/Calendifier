@@ -8,13 +8,21 @@ import logging
 import math
 from datetime import datetime
 from typing import Optional
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QPushButton
-from PySide6.QtCore import Qt, QTimer, Signal, QRect, QPoint
-from PySide6.QtGui import QPainter, QPen, QBrush, QFont, QColor, QPalette
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QLabel,
+    QHBoxLayout,
+    QPushButton,
+    QSizePolicy,
+)
+from PySide6.QtCore import Qt, QTimer, Signal, QRect, QSize
+from PySide6.QtGui import QPainter, QPen, QBrush, QFont, QColor
 
 from calendar_app.utils.ntp_client import TimeManager, NTPResult
 from calendar_app.config.themes import ThemeManager
 from calendar_app.localization.i18n_manager import get_i18n_manager, convert_numbers
+from calendar_app.utils.font_manager import get_emoji_font
 
 
 def _(key: str, **kwargs) -> str:
@@ -26,20 +34,45 @@ def _(key: str, **kwargs) -> str:
         return default if default is not None else key
 
 
-from version import UI_EMOJIS, STATUS_EMOJIS
+from version import UI_EMOJIS, STATUS_EMOJIS  # noqa: E402
 
 logger = logging.getLogger(__name__)
+
+# Vertical gaps inside the clock column (px). Kept modest so the column fits on
+# short screens; the surrounding scroll area handles any residual overflow.
+SECTION_GAP = 16
+CONTROL_GAP = 12
+
+# Point size of the clock emoji shown beside the digital time. The emoji lives
+# in its own label with a proportional emoji font: rendering it inside the
+# monospace time label clipped it (the emoji glyph is wider/taller than a
+# monospace cell). Roughly matches the 24px monospace digits.
+DIGITAL_TIME_ICON_PT = 18
+# Gap (px) between the clock emoji and the digits.
+DIGITAL_TIME_ICON_GAP = 8
 
 
 class AnalogClockWidget(QWidget):
     """🕐 Analog clock face widget."""
+
+    # Preferred size on roomy screens, and the smallest the face may shrink to
+    # before the surrounding column starts to scroll (keeps it legible on 13"
+    # Linux/macOS displays where fonts render larger).
+    PREFERRED_SIZE = 240
+    MINIMUM_SIZE = 150
 
     def __init__(self, parent=None):
         """Initialize analog clock widget."""
         super().__init__(parent)
 
         self.current_time = datetime.now()
-        self.setFixedSize(240, 240)
+
+        # Responsive sizing: shrink to fit tight vertical space rather than a
+        # fixed 240px that overlaps the text below on small screens. paintEvent
+        # already scales to min(width, height), so the face stays circular.
+        self.setMinimumSize(self.MINIMUM_SIZE, self.MINIMUM_SIZE)
+        self.setMaximumHeight(self.PREFERRED_SIZE)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # Clock appearance
         self.face_color = QColor("#2d2d2d")
@@ -49,6 +82,10 @@ class AnalogClockWidget(QWidget):
         self.center_color = QColor("#ffffff")
 
         logger.debug("🕐 Analog clock widget initialized")
+
+    def sizeHint(self) -> QSize:
+        """📐 Preferred (roomy) clock size."""
+        return QSize(self.PREFERRED_SIZE, self.PREFERRED_SIZE)
 
     def set_time(self, time: datetime):
         """⏰ Set current time and update display."""
@@ -194,11 +231,25 @@ class DigitalDisplayWidget(QWidget):
         layout.setSpacing(4)
         layout.setContentsMargins(8, 8, 8, 8)
 
-        # Time label
+        # Time row: a clock emoji in its own proportional-font label next to the
+        # monospace digits. Keeping the emoji out of the monospace time label
+        # avoids it being clipped by the narrow monospace cell.
+        time_row = QHBoxLayout()
+        time_row.setSpacing(DIGITAL_TIME_ICON_GAP)
+        time_row.addStretch()
+
+        self.time_icon = QLabel("🕐")
+        self.time_icon.setFont(get_emoji_font(DIGITAL_TIME_ICON_PT))
+        self.time_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        time_row.addWidget(self.time_icon)
+
         self.time_label = QLabel()
         self.time_label.setProperty("class", "clock-time")
         self.time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.time_label)
+        time_row.addWidget(self.time_label)
+
+        time_row.addStretch()
+        layout.addLayout(time_row)
 
         # Date label
         self.date_label = QLabel()
@@ -235,11 +286,9 @@ class DigitalDisplayWidget(QWidget):
         # Format time and convert to locale-appropriate numerals
         time_str = self.current_time.strftime("%H:%M:%S")
         converted_time_str = convert_numbers(time_str)
-        self.time_label.setText(f"🕐 {converted_time_str}")
+        self.time_label.setText(converted_time_str)
 
         # Format date with localized day and month names
-        import locale
-
         try:
             # Use manual localization for consistent translation
             from calendar_app.localization.i18n_manager import get_i18n_manager
@@ -281,7 +330,7 @@ class DigitalDisplayWidget(QWidget):
             date_str = (
                 f"{weekday}, {self.current_time.day} {month} {self.current_time.year}"
             )
-        except Exception as e:
+        except Exception:
             # Fallback to manual localization
             weekday_names = [
                 _("weekday_monday", default="Monday"),
@@ -318,13 +367,22 @@ class DigitalDisplayWidget(QWidget):
         # Format status
         if self.ntp_status:
             if self.ntp_status.success:
-                status_text = f"🌐 NTP: {STATUS_EMOJIS['ntp_connected']} {_('status.status_ntp_connected', default='Connected')}"
+                status_text = (
+                    f"🌐 NTP: {STATUS_EMOJIS['ntp_connected']} "
+                    f"{_('status.status_ntp_connected', default='Connected')}"
+                )
                 if self.ntp_status.server:
                     status_text += f" ({self.ntp_status.server})"
             else:
-                status_text = f"🌐 NTP: {STATUS_EMOJIS['ntp_disconnected']} {_('status.status_ntp_disconnected', default='Disconnected')}"
+                status_text = (
+                    f"🌐 NTP: {STATUS_EMOJIS['ntp_disconnected']} "
+                    f"{_('status.status_ntp_disconnected', default='Disconnected')}"
+                )
         else:
-            status_text = f"🌐 NTP: {STATUS_EMOJIS['ntp_syncing']} {_('status.status_ntp_connecting', default='Connecting...')}"
+            status_text = (
+                f"🌐 NTP: {STATUS_EMOJIS['ntp_syncing']} "
+                f"{_('status.status_ntp_connecting', default='Connecting...')}"
+            )
 
         self.status_label.setText(status_text)
 
@@ -367,7 +425,8 @@ class ThemeControlWidget(QWidget):
 
         # Dark theme button
         self.dark_button = QPushButton(
-            f"{UI_EMOJIS['theme_dark']} {_('settings.theme_options.dark', default='Dark')}"
+            f"{UI_EMOJIS['theme_dark']} "
+            f"{_('settings.theme_options.dark', default='Dark')}"
         )
         self.dark_button.setCheckable(True)
         self.dark_button.setProperty("class", "theme-dark")
@@ -376,7 +435,8 @@ class ThemeControlWidget(QWidget):
 
         # Light theme button
         self.light_button = QPushButton(
-            f"{UI_EMOJIS['theme_light']} {_('settings.theme_options.light', default='Light')}"
+            f"{UI_EMOJIS['theme_light']} "
+            f"{_('settings.theme_options.light', default='Light')}"
         )
         self.light_button.setCheckable(True)
         self.light_button.setProperty("class", "theme-light")
@@ -445,10 +505,12 @@ class ThemeControlWidget(QWidget):
         try:
             # Update button texts
             self.dark_button.setText(
-                f"{UI_EMOJIS['theme_dark']} {_('settings.theme_options.dark', default='Dark')}"
+                f"{UI_EMOJIS['theme_dark']} "
+                f"{_('settings.theme_options.dark', default='Dark')}"
             )
             self.light_button.setText(
-                f"{UI_EMOJIS['theme_light']} {_('settings.theme_options.light', default='Light')}"
+                f"{UI_EMOJIS['theme_light']} "
+                f"{_('settings.theme_options.light', default='Light')}"
             )
             self.settings_button.setText(
                 f"{UI_EMOJIS['settings']} {_('settings.settings', default='Settings')}"
@@ -502,29 +564,27 @@ class ClockWidget(QWidget):
         layout.setSpacing(8)
         layout.setContentsMargins(8, 8, 8, 8)
 
-        # Analog clock - force it to take up proper space
+        # Analog clock - flexes between its minimum and preferred size so it
+        # never overlaps the digital display below on short screens.
         self.analog_clock = AnalogClockWidget()
-        self.analog_clock.setMinimumHeight(
-            256
-        )  # Force minimum height to prevent overlap (scaled)
-        layout.addWidget(self.analog_clock, 0, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.analog_clock, 1, Qt.AlignmentFlag.AlignHCenter)
 
-        # Add significant spacing to force separation
-        layout.addSpacing(40)
+        # Proportional gap that collapses first when vertical space is scarce.
+        layout.addSpacing(SECTION_GAP)
 
         # Digital display - ensure it's below the analog clock
         self.digital_display = DigitalDisplayWidget()
-        layout.addWidget(self.digital_display, 0, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.digital_display, 0, Qt.AlignmentFlag.AlignHCenter)
 
         # Add spacing between digital display and theme controls
-        layout.addSpacing(16)
+        layout.addSpacing(CONTROL_GAP)
 
         # Theme controls - ensure they're at the bottom
         self.theme_controls = ThemeControlWidget(self.theme_manager)
-        layout.addWidget(self.theme_controls, 0, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.theme_controls, 0, Qt.AlignmentFlag.AlignHCenter)
 
         # Add stretch to fill remaining space
-        layout.addStretch(1)
+        layout.addStretch(0)
 
     def _setup_timer(self):
         """⏰ Setup update timer."""

@@ -4,13 +4,12 @@ Advanced recurring event pattern builder with RFC 5545 RRULE support
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from typing import Optional, List, Dict, Any
+from datetime import date, timedelta
+from typing import Optional
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
-    QFormLayout,
     QGroupBox,
     QLabel,
     QLineEdit,
@@ -21,12 +20,13 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QButtonGroup,
     QListWidget,
-    QTextEdit,
     QDialogButtonBox,
     QMessageBox,
     QWidget,
     QScrollArea,
 )
+
+logger = logging.getLogger(__name__)
 
 # Import native numeral widgets
 try:
@@ -38,12 +38,12 @@ except ImportError:
     NATIVE_WIDGETS_AVAILABLE = False
     NativeSpinBox = QSpinBox
     NativeLineEdit = QLineEdit
-from PySide6.QtCore import Qt, QDate, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt, QDate  # noqa: E402
+from PySide6.QtGui import QFont  # noqa: E402
 
-from ..core.rrule_parser import RRuleParser, Frequency, Weekday
-from ..core.recurring_event_generator import RecurringEventGenerator
-from ..localization import get_i18n_manager
+from ..core.rrule_parser import RRuleParser  # noqa: E402
+from ..core.recurring_event_generator import RecurringEventGenerator  # noqa: E402
+from ..localization import get_i18n_manager  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -372,8 +372,8 @@ class RRuleDialog(QDialog):
         until_layout.addWidget(self.until_radio)
 
         # Create pure datepicker button (no edit field)
-        from PySide6.QtWidgets import QPushButton, QCalendarWidget
-        from PySide6.QtCore import QDate, QLocale
+        from PySide6.QtWidgets import QPushButton
+        from PySide6.QtCore import QLocale
         from PySide6.QtGui import QIcon
 
         # Store the selected date
@@ -390,13 +390,11 @@ class RRuleDialog(QDialog):
         self.until_edit.setIcon(QIcon())
 
         # Set stylesheet to center text
-        self.until_edit.setStyleSheet(
-            """
+        self.until_edit.setStyleSheet("""
             QPushButton {
                 text-align: center;
             }
-        """
-        )
+        """)
 
         # Update button text with formatted date
         self._update_until_button_text()
@@ -699,7 +697,7 @@ class RRuleDialog(QDialog):
             QMessageBox.warning(
                 self,
                 self.i18n.get_text("error.title", default="Error"),
-                f"{self.i18n.get_text('recurring.error.invalid_rrule', default='Invalid recurrence pattern')}: {e}",
+                f"{self.i18n.get_text('recurring.error.invalid_rrule', default='Invalid recurrence pattern')}: {e}",  # noqa: E501
             )
 
     def _update_native_displays(self):
@@ -801,7 +799,10 @@ class RRuleDialog(QDialog):
                 ]
                 if interval == 1 and len(selected_days) == 1:
                     # Simple weekly on one day
-                    day_key = f"rrule.weekday.{self._get_weekday_name_from_code(list(selected_days)[0])}"
+                    weekday_name = self._get_weekday_name_from_code(
+                        list(selected_days)[0]
+                    )
+                    day_key = f"rrule.weekday.{weekday_name}"
                     day_name = self.i18n.get_text(
                         day_key, default=list(selected_days)[0]
                     )
@@ -896,7 +897,7 @@ class RRuleDialog(QDialog):
         except Exception as e:
             logger.error(f"❌ Preview update failed: {e}")
             self.preview_description.setText(
-                f"{self.i18n.get_text('recurring.error.invalid_rrule', default='Invalid recurrence pattern')}: {e}"
+                f"{self.i18n.get_text('recurring.error.invalid_rrule', default='Invalid recurrence pattern')}: {e}"  # noqa: E501
             )
             self.preview_list.clear()
 
@@ -936,7 +937,7 @@ class RRuleDialog(QDialog):
             QMessageBox.warning(
                 self,
                 self.i18n.get_text("error.title", default="Error"),
-                f"{self.i18n.get_text('recurring.error.invalid_rrule', default='Invalid recurrence pattern')}: {e}",
+                f"{self.i18n.get_text('recurring.error.invalid_rrule', default='Invalid recurrence pattern')}: {e}",  # noqa: E501
             )
 
     def _on_cancel(self):
@@ -992,7 +993,6 @@ class RRuleDialog(QDialog):
                 QDialog,
                 QDialogButtonBox,
             )
-            from PySide6.QtCore import QDate
 
             # Create calendar dialog
             dialog = QDialog(self)
@@ -1028,8 +1028,7 @@ class RRuleDialog(QDialog):
                             button.setText("▶️")  # Red right triangle
 
                 # Alternative approach: set stylesheet for navigation buttons
-                calendar.setStyleSheet(
-                    """
+                calendar.setStyleSheet("""
                     QCalendarWidget QToolButton#qt_calendar_prevmonth {
                         qproperty-text: "◀️";
                         font-size: 14px;
@@ -1038,8 +1037,7 @@ class RRuleDialog(QDialog):
                         qproperty-text: "▶️";
                         font-size: 14px;
                     }
-                """
-                )
+                """)
             except Exception as e:
                 logger.warning(f"Could not customize calendar navigation buttons: {e}")
 

@@ -10,7 +10,7 @@ import logging
 import asyncio
 import zoneinfo
 from datetime import datetime, timezone
-from typing import Optional, List, Tuple
+from typing import Optional, List
 from dataclasses import dataclass
 
 from version import DEFAULT_NTP_SERVERS, STATUS_EMOJIS
@@ -91,7 +91,7 @@ def get_system_timezone() -> str:
                     # If no mapping found, try to use the Windows timezone name directly
                     # Some Windows timezone names might work with zoneinfo
                     logger.debug(
-                        f"No mapping found for Windows timezone: {win_tz}, trying direct use"
+                        f"No mapping found for Windows timezone: {win_tz}, trying direct use"  # noqa: E501
                     )
                     try:
                         import zoneinfo
@@ -302,7 +302,6 @@ class NTPClient:
 
             # Calculate time information
             ntp_time = datetime.fromtimestamp(response.tx_time, timezone.utc)
-            local_time = datetime.now(timezone.utc)
             offset = response.offset
             delay = response.delay
 
@@ -355,7 +354,6 @@ class NTPClient:
 
             # Calculate time information
             ntp_time = datetime.fromtimestamp(response.tx_time, timezone.utc)
-            local_time = datetime.now(timezone.utc)
             offset = response.offset
             delay = response.delay
 
@@ -422,7 +420,7 @@ class NTPClient:
                 adjusted_local = adjusted_utc.astimezone(user_tz)
 
                 logger.debug(
-                    f"🌍 NTP adjusted time for timezone {user_tz_setting}: {adjusted_local}"
+                    f"🌍 NTP adjusted time for timezone {user_tz_setting}: {adjusted_local}"  # noqa: E501
                 )
                 return adjusted_local
             else:
@@ -533,7 +531,7 @@ class TimeManager:
         return result
 
     def get_current_time(self) -> datetime:
-        """🕐 Get current time (NTP adjusted or system fallback) in locale-aware timezone."""
+        """🕐 Get current time (NTP adjusted or system fallback) in locale-aware timezone."""  # noqa: E501
         return self.ntp_client.get_adjusted_time(self._last_ntp_result)
 
     def is_ntp_synced(self) -> bool:

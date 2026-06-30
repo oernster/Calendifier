@@ -53,12 +53,8 @@ class NumberFormatter:
                 "8": "๘",
                 "9": "๙",
             },
-            # Persian numerals (used in some Persian contexts)
-            # Note: Modern Persian often uses Arabic-Indic, but traditional Persian numerals exist
-            # Bengali numerals (if we add Bengali support)
-            # 'bn_BD': {'0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯'},
-            # Myanmar numerals (if we add Myanmar support)
-            # 'my_MM': {'0': '၀', '1': '၁', '2': '၂', '3': '၃', '4': '၄', '5': '၅', '6': '၆', '7': '၇', '8': '၈', '9': '၉'},
+            # Future systems (Persian, Bengali bn_BD, Myanmar my_MM) can be
+            # added here following the same digit-map pattern.
         }
 
         # Locales that prefer native number systems in formal contexts
@@ -132,7 +128,7 @@ class NumberFormatter:
                 )
                 return formatted
 
-            # For locales with specific formatting preferences but using Western Arabic numerals
+            # Locales with formatting preferences but Western Arabic numerals.
             elif locale in self.western_arabic_locales:
                 # Could add thousand separators, decimal formatting, etc. here
                 return number_str
@@ -141,7 +137,7 @@ class NumberFormatter:
             else:
                 return number_str
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - defensive; str(int) does not raise
             logger.warning(f"Failed to format number {number} for locale {locale}: {e}")
             return str(number)
 
@@ -164,7 +160,8 @@ class NumberFormatter:
                 # Add locale-specific ordinal patterns
                 if locale == "ar_SA":
                     # Arabic ordinals typically use the number with specific markers
-                    return f"{formatted_number}"  # Arabic ordinals are complex, keeping simple for now
+                    # Arabic ordinals are complex; keep it simple for now.
+                    return f"{formatted_number}"
                 elif locale == "hi_IN":
                     # Hindi ordinals
                     return (
@@ -172,16 +169,16 @@ class NumberFormatter:
                         if number > 1
                         else f"{formatted_number}ला"
                     )
-                elif locale == "th_TH":
-                    # Thai ordinals
+                else:
+                    # Thai ordinals (th_TH is the only remaining native locale)
                     return f"ที่ {formatted_number}"
 
-            # For other locales, use Western Arabic numerals with locale-appropriate ordinal patterns
+            # Other locales: Western Arabic numerals with locale ordinal patterns.
             else:
                 # This will be handled by the translation keys we added
                 return str(number)
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - defensive; str(int) does not raise
             logger.warning(
                 f"Failed to format ordinal {number} for locale {locale}: {e}"
             )

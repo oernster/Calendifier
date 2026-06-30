@@ -1,0 +1,35 @@
+# Coverage configuration for the primary (non-fragile, mock-free) gate.
+# Qt/UI, network (NTP), web/HA, installer and build scripts are deliberately
+# outside the gated source set (see pyproject.toml [tool.pytest.ini_options]).
+[run]
+branch = True
+# The gated source set: the non-fragile, mock-free "core logic" surface only.
+# Defined here (not via per-module --cov flags) so that any --cov invocation
+# ("pytest", "pytest --cov", "pytest -v --cov") measures exactly this set.
+# Qt/UI, network (NTP), web/HA, i18n manager, installer and build scripts are
+# deliberately outside the gate (see pyproject.toml [tool.pytest.ini_options]).
+include =
+    */version.py
+    */stamp_version.py
+    */calendar_app/shared/resources.py
+    */calendar_app/data/models.py
+    */calendar_app/core/multi_country_holiday_provider.py
+    */calendar_app/core/observances.py
+    */calendar_app/core/observance_data.py
+    */calendar_app/core/holiday_translations.py
+    */calendar_app/core/rrule_parser.py
+    */calendar_app/config/settings.py
+    */calendar_app/localization/locale_detector.py
+    */calendar_app/localization/number_formatter.py
+omit =
+    */venv/*
+    */tests/*
+    */__pycache__/*
+
+[report]
+show_missing = True
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    raise NotImplementedError
+    if __name__ == .__main__.:

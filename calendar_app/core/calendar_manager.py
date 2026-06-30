@@ -35,7 +35,7 @@ class CalendarManager:
         self._cache_year = None
 
         logger.info(
-            f"📅 Calendar Manager initialized for {self.current_year}-{self.current_month:02d}"
+            f"📅 Calendar Manager initialized for {self.current_year}-{self.current_month:02d}"  # noqa: E501
         )
 
     def get_month_data(self, year: int, month: int) -> CalendarMonth:
@@ -45,7 +45,8 @@ class CalendarManager:
             self._seen_events_cache.clear()
             logger.debug(f"📅 Cleared event cache for month load: {year}-{month:02d}")
 
-            # Get the actual calendar grid date range (includes previous/next month days)
+            # Get the actual calendar grid date range
+            # (includes previous/next month days)
             cal = calendar.Calendar(firstweekday=self.first_day_of_week)
             month_calendar = cal.monthdatescalendar(year, month)
 
@@ -54,7 +55,7 @@ class CalendarManager:
             grid_end_date = month_calendar[-1][-1]  # Last day of last week
 
             logger.debug(
-                f"📆 Calendar grid for {year}-{month:02d} spans {grid_start_date} to {grid_end_date}"
+                f"📆 Calendar grid for {year}-{month:02d} spans {grid_start_date} to {grid_end_date}"  # noqa: E501
             )
 
             # Get holidays for the extended range
@@ -93,7 +94,7 @@ class CalendarManager:
             # Auto-clear cache when year changes (enhanced deduplication)
             if self._cache_year != year:
                 logger.debug(
-                    f"📅 Year changed from {self._cache_year} to {year}, clearing event cache"
+                    f"📅 Year changed from {self._cache_year} to {year}, clearing event cache"  # noqa: E501
                 )
                 self._seen_events_cache.clear()
                 self._cache_year = year
@@ -106,9 +107,10 @@ class CalendarManager:
                     # CRITICAL FIX: Never display master recurring events on calendar
                     # Only show generated occurrence events (or non-recurring events)
                     if event.is_recurring and not event.is_occurrence():
-                        # This is a master recurring event - skip it (don't display on calendar)
+                        # This is a master recurring event - skip it
+                        # (don't display on calendar)
                         logger.debug(
-                            f"🔄 Skipping master recurring event {event.id} ({event.title}) - only occurrences should be displayed"
+                            f"🔄 Skipping master recurring event {event.id} ({event.title}) - only occurrences should be displayed"  # noqa: E501
                         )
                         continue
 
@@ -124,10 +126,11 @@ class CalendarManager:
                         master_id = getattr(event, "recurrence_master_id", None)
                         event_key = (event.title, event.start_date, master_id)
 
-                    # Skip if we've already seen this event occurrence (persistent cache)
+                    # Skip if we've already seen this event occurrence
+                    # (persistent cache)
                     if event_key in self._seen_events_cache:
                         logger.debug(
-                            f"🔄 Skipping duplicate event occurrence: {event.title} on {event.start_date}"
+                            f"🔄 Skipping duplicate event occurrence: {event.title} on {event.start_date}"  # noqa: E501
                         )
                         continue
 
@@ -140,10 +143,10 @@ class CalendarManager:
                     # Display non-recurring events and occurrence events
                     events_by_date[event.start_date].append(event)
                     logger.debug(
-                        f"📅 Added event to calendar: {event.title} on {event.start_date} (master_id: {getattr(event, 'recurrence_master_id', None)})"
+                        f"📅 Added event to calendar: {event.title} on {event.start_date} (master_id: {getattr(event, 'recurrence_master_id', None)})"  # noqa: E501
                     )
                     logger.info(
-                        f"📅 Events for {event.start_date}: {len(events_by_date[event.start_date])} total"
+                        f"📅 Events for {event.start_date}: {len(events_by_date[event.start_date])} total"  # noqa: E501
                     )
                 else:
                     logger.warning(
@@ -160,7 +163,7 @@ class CalendarManager:
             )
 
             logger.debug(
-                f"📆 Generated calendar for {year}-{month:02d} with {len(holidays)} holidays and {len(events)} events"
+                f"📆 Generated calendar for {year}-{month:02d} with {len(holidays)} holidays and {len(events)} events"  # noqa: E501
             )
             return calendar_month
 

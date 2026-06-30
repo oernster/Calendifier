@@ -109,7 +109,7 @@ class Event:
 
             parser = RRuleParser()
             return parser.validate_rrule(self.rrule)
-        except ImportError:
+        except ImportError:  # pragma: no cover - rrule_parser ships with the app
             # Fallback basic validation
             return self.rrule.startswith("FREQ=")
 
@@ -131,7 +131,7 @@ class Event:
 
             parser = RRuleParser()
             return parser.get_human_readable_description(self.rrule)
-        except ImportError:
+        except ImportError:  # pragma: no cover - rrule_parser ships with the app
             return "Recurring event"
 
     def to_dict(self) -> Dict[str, Any]:
@@ -336,7 +336,7 @@ class CalendarDay:
             for event in self.events:
                 indicators.append(event.get_category_emoji())
         else:
-            # Show first 5 indicators plus a "+X" counter for remaining events (when more than 6)
+            # Show first 5 indicators plus a "+X" counter for the rest (when > 6).
             for event in self.events[:5]:
                 indicators.append(event.get_category_emoji())
             remaining_count = len(self.events) - 5
@@ -410,7 +410,8 @@ class AppSettings:
     first_day_of_week: int = 0  # 0 = Monday
     show_week_numbers: bool = False
     default_event_duration: int = 60  # minutes
-    holiday_country: str = "GB"  # ISO 3166-1 alpha-2 country code (UK default)
+    # ISO 3166-1 alpha-2 country code, or "auto" to derive from the timezone
+    holiday_country: str = "auto"
 
     def to_dict(self) -> Dict[str, Any]:
         """📋 Convert settings to dictionary."""
@@ -449,7 +450,7 @@ class AppSettings:
             first_day_of_week=data.get("first_day_of_week", 0),
             show_week_numbers=data.get("show_week_numbers", False),
             default_event_duration=data.get("default_event_duration", 60),
-            holiday_country=data.get("holiday_country", "GB"),
+            holiday_country=data.get("holiday_country", "auto"),
         )
 
 

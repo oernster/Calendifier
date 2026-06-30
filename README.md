@@ -361,26 +361,39 @@ python main.py
 
 See [Architecture Documentation](docs/architecture.md#-adding-new-languages) for detailed instructions.
 
-## 📦 Building & Distribution
+## 🧪 Testing & Quality
 
-Calendifier supports multiple build targets for maximum compatibility across platforms:
-
-### 🖥️ Cross-Platform Executable (Nuitka)
-
-Build a single executable file for Windows, macOS, and Linux:
+Calendifier enforces a **100% test-coverage gate** over its core logic surface (version handling, data models, settings, locale detection, number formatting, the RRULE parser, the holiday providers and the observance engine and data). Tests use **real objects and real inputs only, no mocking**, and avoid fragile constructs. A structural test also keeps source modules within a 400-line limit.
 
 ```bash
-# Standard build
-python build.py
-
-# Debug build with verbose output
-python build.py --debug
-
-# Clean build
-python build.py --clean
+python -m pytest                                    # core gate (100%)
+python -m pytest tests/ui --no-cov -o addopts=""    # Qt/UI suite (not gated)
+python -m black --check .                            # format
+python -m flake8 .                                   # lint
 ```
 
-**Output**: Single executable file in `dist/` directory
+See **[TESTING.md](TESTING.md)** for the full testing policy, the gated module list and how to extend it.
+
+## 📦 Building & Distribution
+
+Calendifier is packaged with **PyInstaller** on every platform, using a consistent set of repo-root build scripts. The version is read from the single source of truth, the [`VERSION`](VERSION) file (currently <!--VERSION-->1.7.0<!--/VERSION-->), and stamped into the docs at build time. For full environment setup and step-by-step instructions see **[DEVELOPMENT-README.md](DEVELOPMENT-README.md)**.
+
+### 🪟 Windows (per-user installer)
+
+```bash
+python buildexe.py        # app bundle      -> dist-pyinstaller/Calendifier/
+python buildinstaller.py  # payload + setup -> dist-installer/CalendifierSetup.exe
+```
+
+A bespoke, per-user installer (no admin rights) under `installer/` extracts to `%LOCALAPPDATA%\Programs\Calendifier`, registers an uninstall entry and offers Start Menu / Desktop shortcuts.
+
+### 🍎 macOS (signed DMG)
+
+```bash
+python builddmg.py
+```
+
+Builds a code-signed `Calendifier.app`, packages it as `calendifier.dmg`, and notarizes/staples it when `APPLE_ID` and `APPLE_APP_PASSWORD` are set.
 
 ### 📦 Linux Flatpak Package
 
@@ -412,66 +425,17 @@ chmod +x build_flatpak.sh
 - **Cross-Distribution Support** - Works on all major Linux distributions
 - **Interactive Installation** - Prompts to install the built package automatically
 
-## 📦 Legacy Build Information (Nuitka)
+### 🎨 Icons
 
-Calendifier includes a Nuitka build script that creates a single executable file while complying with PySide6's LGPL3 license requirements:
-
-### 🔧 Build Requirements
+All icon artifacts (the per-size PNG set, the Windows multi-resolution `.ico`, the macOS `.icns` and a scalable SVG) are generated from a single master image:
 
 ```bash
-# Install Nuitka (required for building)
-pip install nuitka
+python generate_icons.py
 ```
 
-### 🚀 Build Commands
+### ⚖️ Licensing
 
-```bash
-# Standard build - creates single executable with progress monitoring
-python build.py
-
-# Debug build - shows verbose compilation output
-python build.py --debug
-
-# Clean build - removes all build artifacts first
-python build.py --clean
-```
-
-### ✨ Build Features
-
-**🎯 Single File Output:**
-- Creates **one executable file** (`calendifier.exe` on Windows)
-- **No additional .dll or .pyd files** in distribution
-- **Clean dist directory** with only essential files
-
-**📊 Real-time Progress:**
-- **Visual progress indicators** during compilation
-- **Animated spinner** for long compilation phases
-- **Heartbeat messages** every 30 seconds
-- **Detailed progress parsing** of Nuitka output
-
-**⚖️ LGPL3 Compliance:**
-- ✅ **License documentation** in dist root
-- ✅ **Source code availability** notice included
-- ✅ **Library replacement** instructions provided
-- ✅ **Compliance notice** with build timestamp
-
-### 📁 Build Output
-
-After successful build, the `dist/` directory contains exactly:
-```
-dist/
-├── calendifier.exe                    # Main executable
-├── CALENDIFIER_LICENSE.txt           # Application license
-└── LGPL3_COMPLIANCE_NOTICE.txt       # LGPL compliance documentation
-```
-
-**Build Process:**
-1. **Cleans** dist directory completely
-2. **Compiles** with Nuitka using `--onefile` mode
-3. **Includes** all translation files and assets
-4. **Creates** LGPL compliance documentation
-5. **Removes** any extra build artifacts
-6. **Shows** final file listing and size information
+Calendifier is distributed under **LGPL-3.0**, aligning with PySide6/Qt. The licence text ships with every installer and is shown in the installer UI.
 
 
 ## 📦 Project Structure
@@ -513,6 +477,8 @@ Calendifier includes comprehensive documentation in the `docs/` directory:
 
 | Document | Description |
 |----------|-------------|
+| [Development & Build Guide](DEVELOPMENT-README.md) | Environment setup and per-platform build instructions |
+| [Testing & Quality](TESTING.md) | The 100% coverage gate, how to run it and how to extend it |
 | [Architecture Overview](docs/architecture.md) | Complete system architecture and component design |
 | [API Server](docs/api-server.md) | API endpoints and server implementation details |
 | **API Documentation** | Access the interactive API documentation at `http://your-server-ip:8000/docs` (Swagger UI) or `http://your-server-ip:8000/redoc` (ReDoc) |
@@ -539,6 +505,10 @@ The application stores user data in:
 - **`logs/`** - Application logs
 - **`exports/`** - Exported calendar files
 - **`backups/`** - Database backups
+
+### 🔈 Logging
+
+The console shows only warnings and errors by default; full detail is written to `logs/calendar_app.log` under the user data directory. Set `CALENDIFIER_LOG_LEVEL=INFO` (or `DEBUG`) before launching to raise console verbosity.
 
 ## 🤝 Contributing
 

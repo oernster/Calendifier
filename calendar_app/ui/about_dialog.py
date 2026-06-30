@@ -11,26 +11,27 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QTextEdit,
     QFrame,
     QScrollArea,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QPixmap, QPainter
+from PySide6.QtGui import QFont, QIcon, QPixmap
 
 from version import (
-    get_version_string,
-    get_about_text,
     APP_ICON,
+    APP_NAME,
     __version__,
     __author__,
-    __description__,
     __copyright__,
     __license__,
 )
 from calendar_app.localization import get_i18n_manager
+from calendar_app.shared.resources import find_qt_window_icon_path
 
 logger = logging.getLogger(__name__)
+
+# Size (px) of the real app icon shown in the About header.
+_ABOUT_ICON_PX = 64
 
 
 def _(key: str, **kwargs) -> str:
@@ -56,7 +57,7 @@ class AboutDialog(QDialog):
     def _setup_ui(self):
         """🏗️ Setup about dialog UI."""
         # Use the working approach from the old version but with translation support
-        app_name = _("app_name")
+        app_name = APP_NAME
         self.setWindowTitle(_("about_dialog_title").format(app_name=app_name))
         self.setModal(True)
         self.setFixedSize(500, 600)
@@ -68,21 +69,30 @@ class AboutDialog(QDialog):
         # Header with icon and title
         header_layout = QHBoxLayout()
 
-        # App icon
+        # App icon: use the real application icon, falling back to the emoji
+        # glyph only if the icon file cannot be found.
         icon_label = QLabel()
-        icon_label.setText(APP_ICON)
-        # Use font manager for better compatibility
-        from calendar_app.utils.font_manager import get_emoji_font
-
-        icon_label.setFont(get_emoji_font(48))
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_label.setFixedSize(80, 80)
+        icon_path = find_qt_window_icon_path()
+        pixmap = (
+            QIcon(str(icon_path)).pixmap(_ABOUT_ICON_PX, _ABOUT_ICON_PX)
+            if icon_path is not None
+            else QPixmap()
+        )
+        if not pixmap.isNull():
+            icon_label.setPixmap(pixmap)
+        else:
+            icon_label.setText(APP_ICON)
+            from calendar_app.utils.font_manager import get_emoji_font
+
+            icon_label.setFont(get_emoji_font(48))
         header_layout.addWidget(icon_label)
 
         # Title and version
         title_layout = QVBoxLayout()
 
-        title_label = QLabel(_("app_name"))
+        title_label = QLabel(APP_NAME)
         from calendar_app.utils.font_manager import get_ui_font
 
         title_label.setFont(get_ui_font(18, QFont.Weight.Bold))
@@ -123,24 +133,21 @@ class AboutDialog(QDialog):
         )
 
         info_text = f"""
-<h3>📋 {_('about_features')}</h3>
-<p>{_('app_description')}</p>
-
-<h3>✨ {_('about_features')}</h3>
+<h3>{_('about_features')}</h3>
 <ul>
-<li>🕐 <b>{_('feature_analog_clock')}</b></li>
-<li>📅 <b>{_('feature_calendar_view')}</b></li>
-<li>🌍 <b>{_('feature_international_holidays')}</b></li>
-<li>📝 <b>{_('feature_event_management')}</b></li>
-<li>📋 <b>{_('feature_note_taking')}</b></li>
-<li>🌐 <b>{_('feature_ntp_sync')}</b></li>
-<li>🎨 <b>{_('feature_themes')}</b></li>
-<li>📤📥 <b>{_('feature_import_export')}</b></li>
-<li>💾 <b>{_('feature_data_persistence')}</b></li>
-<li>💻 <b>{_('feature_cross_platform')}</b></li>
+<li><b>{_('feature_analog_clock')}</b></li>
+<li><b>{_('feature_calendar_view')}</b></li>
+<li><b>{_('feature_international_holidays')}</b></li>
+<li><b>{_('feature_event_management')}</b></li>
+<li><b>{_('feature_note_taking')}</b></li>
+<li><b>{_('feature_ntp_sync')}</b></li>
+<li><b>{_('feature_themes')}</b></li>
+<li><b>{_('feature_import_export')}</b></li>
+<li><b>{_('feature_data_persistence')}</b></li>
+<li><b>{_('feature_cross_platform')}</b></li>
 </ul>
 
-<h3>🛠️ {_('about_technical_details')}</h3>
+<h3>{_('about_technical_details')}</h3>
 <ul>
 <li><b>{_('tech_framework')}</b> {_('tech_framework_value')}</li>
 <li><b>{_('tech_language')}</b> {_('tech_language_value')}</li>
@@ -151,7 +158,7 @@ class AboutDialog(QDialog):
 <li><b>{_('tech_themes')}</b> {_('tech_themes_value')}</li>
 </ul>
 
-<h3>📊 {_('about_system_requirements')}</h3>
+<h3>{_('about_system_requirements')}</h3>
 <ul>
 <li><b>{_('sys_python')}</b> {_('sys_python_value')}</li>
 <li><b>{_('sys_memory')}</b> {_('sys_memory_value')}</li>
@@ -160,7 +167,7 @@ class AboutDialog(QDialog):
 <li><b>{_('sys_network')}</b> {_('sys_network_value')}</li>
 </ul>
 
-<h3>🎯 {_('about_keyboard_shortcuts')}</h3>
+<h3>{_('about_keyboard_shortcuts')}</h3>
 <ul>
 <li><b>Ctrl+T:</b> {_('shortcut_today')}</li>
 <li><b>Ctrl+I:</b> {_('shortcut_import')}</li>
@@ -169,7 +176,7 @@ class AboutDialog(QDialog):
 <li><b>Ctrl+Q:</b> {_('shortcut_exit')}</li>
 </ul>
 
-<h3>📚 {_('about_libraries_used')}</h3>
+<h3>{_('about_libraries_used')}</h3>
 <ul>
 <li><b>PySide6:</b> {_('lib_pyside6')}</li>
 <li><b>ntplib:</b> {_('lib_ntplib')}</li>
@@ -178,19 +185,19 @@ class AboutDialog(QDialog):
 <li><b>icalendar:</b> {_('lib_icalendar')}</li>
 </ul>
 
-<h3>📄 {_('about_license')}</h3>
+<h3>{_('about_license')}</h3>
 <p><b>{__license__}</b></p>
 <p>{__copyright__}</p>
 
-<h3>👨‍💻 {_('about_development')}</h3>
+<h3>{_('about_development')}</h3>
 <p><b>{_('dev_author')}</b> {__author__}</p>
 <p><b>{_('dev_testing')}</b> {_('dev_testing_value')}</p>
 <p><b>{_('dev_built_with')}</b> {_('dev_built_with_value')}</p>
 
-<h3>🐛 {_('about_support')}</h3>
+<h3>{_('about_support')}</h3>
 <p>{_('support_text')}</p>
 
-<h3>🙏 {_('about_acknowledgments')}</h3>
+<h3>{_('about_acknowledgments')}</h3>
 <p>{_('acknowledgments_text')}</p>
 """
 
@@ -237,7 +244,7 @@ class AboutDialog(QDialog):
         """🔄 Refresh UI text after language change."""
         try:
             # Update window title
-            app_name = _("app_name")
+            app_name = APP_NAME
             self.setWindowTitle(_("about_dialog_title").format(app_name=app_name))
 
             # If dialog is visible, close it to avoid layout conflicts
@@ -273,7 +280,7 @@ class AboutDialog(QDialog):
             # Fallback if translation fails
             try:
                 self.setWindowTitle("ℹ️ About Calendar Application")
-            except:
+            except Exception:
                 pass
 
     def _clear_layout(self, layout):

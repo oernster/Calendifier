@@ -5,9 +5,8 @@ This module contains the calendar grid display with navigation and event indicat
 """
 
 import logging
-import calendar
-from datetime import date, datetime, timedelta
-from typing import List, Optional, Dict
+from datetime import date, datetime
+from typing import List, Optional
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -16,16 +15,12 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QFrame,
-    QScrollArea,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt, Signal, QDate, QSize
-from PySide6.QtGui import QFont, QPalette, QColor
+from PySide6.QtCore import Qt, Signal
 
 from calendar_app.core.calendar_manager import CalendarManager
-from calendar_app.core.event_manager import EventManager
-from calendar_app.core.multi_country_holiday_provider import MultiCountryHolidayProvider
-from calendar_app.data.models import CalendarMonth, CalendarDay, Event
+from calendar_app.data.models import CalendarMonth, CalendarDay
 from calendar_app.localization.i18n_manager import get_i18n_manager, convert_numbers
 
 
@@ -34,7 +29,7 @@ def _(key: str, **kwargs) -> str:
     return get_i18n_manager().get_text(key, **kwargs)
 
 
-from version import UI_EMOJIS
+from version import UI_EMOJIS  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +83,8 @@ class CalendarDayWidget(QLabel):
         day_num = day.date.day
         converted_day_num = convert_numbers(str(day_num))
         html_parts.append(
-            f'<div style="font-weight: bold; margin-bottom: 2px;">{converted_day_num}</div>'
+            f'<div style="font-weight: bold; margin-bottom: 2px;">'
+            f"{converted_day_num}</div>"
         )
 
         # Add event indicators as larger icons
@@ -96,7 +92,10 @@ class CalendarDayWidget(QLabel):
             indicators = day.get_event_indicators()
             if indicators:
                 # Create a grid layout for icons (2 columns, up to 3 rows)
-                icon_html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1px; font-size: 20px;">'
+                icon_html = (
+                    '<div style="display: grid; '
+                    'grid-template-columns: 1fr 1fr; gap: 1px; font-size: 20px;">'
+                )
 
                 for i, indicator in enumerate(indicators):
                     if i < 6:  # Maximum 6 slots (5 icons + 1 overflow)
@@ -151,9 +150,12 @@ class CalendarDayWidget(QLabel):
             # Use smaller font for longer text to ensure it fits
             font_size = "8px" if len(lines) > 2 else "9px" if len(lines) > 1 else "10px"
 
-            # Use theme-aware colors: inherit from parent (white in dark mode, black in light mode)
+            # Use theme-aware colors: inherit from parent
+            # (white in dark mode, black in light mode)
             html_parts.append(
-                f'<div style="font-size: {font_size}; margin-top: 1px; text-align: left; line-height: 0.9; font-weight: bold; overflow: hidden;">{holiday_display}</div>'
+                f'<div style="font-size: {font_size}; margin-top: 1px; '
+                f"text-align: left; line-height: 0.9; font-weight: bold; "
+                f'overflow: hidden;">{holiday_display}</div>'
             )
 
         # Set HTML content
@@ -403,7 +405,8 @@ class CalendarGridWidget(QWidget):
         self.grid_layout.setSpacing(1)
 
         # Set fixed size for the grid widget to ensure consistent layout
-        # Width: 7 widgets * 100px + 6 spacings * 1px + week numbers column (30px) + 1px margin = 737px (when week numbers shown)
+        # Width: 7 widgets * 100px + 6 spacings * 1px + week numbers column
+        # (30px) + 1px margin = 737px (when week numbers shown)
         # Height: 6 widgets * 80px + 5 spacings * 1px + extra margin = 490px
         self._update_grid_size()
 
@@ -414,7 +417,8 @@ class CalendarGridWidget(QWidget):
 
     def _update_grid_size(self):
         """📏 Update grid size - always includes week numbers."""
-        # Width: week numbers column (24px) + 7 widgets * 80px + 7 spacings * 1px = 591px
+        # Width: week numbers column (24px) + 7 widgets * 80px
+        # + 7 spacings * 1px = 591px
         # Height: 6 widgets * 64px + 5 spacings * 1px = 389px (scaled for 13" MacBook)
         self.grid_widget.setFixedSize(591, 389)
 
@@ -503,7 +507,8 @@ class CalendarGridWidget(QWidget):
         # Always use column offset of 1 for week numbers
         col_offset = 1
         logger.debug(
-            f"📅 Creating grid with week numbers: always enabled, col_offset: {col_offset}"
+            f"📅 Creating grid with week numbers: always enabled, "
+            f"col_offset: {col_offset}"
         )
 
         for week in range(6):  # 6 weeks maximum
@@ -553,7 +558,8 @@ class CalendarGridWidget(QWidget):
             if week_idx < len(self.week_number_widgets):
                 week_number_widget = self.week_number_widgets[week_idx]
                 if week:  # If week has days
-                    # Get week number from first day of the week - convert to locale-appropriate numerals
+                    # Get week number from first day of the week -
+                    # convert to locale-appropriate numerals
                     first_day = week[0].date
                     week_number = first_day.isocalendar()[1]  # ISO week number
                     converted_week_number = convert_numbers(str(week_number))
@@ -684,7 +690,8 @@ class CalendarWidget(QWidget):
 
         self._load_current_month()
         logger.debug(
-            f"📅 Calendar manager set and loaded {self.current_year}-{self.current_month:02d}"
+            f"📅 Calendar manager set and loaded "
+            f"{self.current_year}-{self.current_month:02d}"
         )
 
     def _load_current_month(self):
@@ -922,7 +929,8 @@ class CalendarWidget(QWidget):
                 # Refresh holiday translations for new locale
                 self.calendar_manager.refresh_holiday_translations()
             else:
-                # Even without calendar manager, update day headers to refresh week header text
+                # Even without calendar manager, update day headers to
+                # refresh week header text
                 self.grid._update_day_headers()
 
             # Force complete calendar refresh to update month names and holiday content

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "calendifier"
+dynamic = ["version"]
+description = "Cross-platform desktop calendar with analog clock, events, notes and international holidays"
+authors = [{name = "Oliver Ernster", email = "oernster@codecrafter.uk"}]
+license = {text = "LGPL-3.0-only"}
+requires-python = ">=3.11"
+dependencies = [
+    "PySide6>=6.9.1",
+    "holidays>=0.75",
+    "ntplib>=0.4.0",
+    "icalendar>=6.3.1",
+]
+
+# Single source of truth for the version: the VERSION file at the repo root.
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+# The primary test gate covers the non-fragile, mock-free "core logic" surface
+# at 100%. Qt/UI tests live in tests/ui and are run separately (not gated).
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+pythonpath = ["."]
+# The gated source set is defined once in .coveragerc ([run] include), so a
+# bare --cov here (and a bare --cov on the command line, e.g. "pytest --cov")
+# both resolve to the same scoped 100% gate rather than measuring the whole
+# tree (which would pull in ungated UI/NTP modules and PySide6 deploy files).
+addopts = """
+    --cov
+    --cov-branch
+    --cov-report=term-missing
+    --cov-fail-under=100
+"""

@@ -5,7 +5,7 @@ This module contains the event display and management panel.
 """
 
 import logging
-from datetime import date, datetime, time
+from datetime import date, time
 from typing import List, Optional
 from PySide6.QtWidgets import (
     QWidget,
@@ -15,14 +15,11 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QFrame,
-    QListWidget,
-    QListWidgetItem,
     QMessageBox,
     QFileDialog,
     QDialog,
 )
-from PySide6.QtCore import Qt, Signal, QSize
-from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt, Signal
 
 from calendar_app.core.event_manager import EventManager
 from calendar_app.data.models import Event
@@ -43,12 +40,12 @@ def _(key: str, **kwargs) -> str:
         if result == key and default != key:
             return default
         return result
-    except Exception as e:
+    except Exception:
         # Fallback to default or key if translation fails
         return kwargs.get("default", key)
 
 
-from version import UI_EMOJIS, EVENT_CATEGORY_EMOJIS
+from version import UI_EMOJIS  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +178,7 @@ class EventItemWidget(QFrame):
             time_text = f"🕐 {_('events.all_day', default='All day')}"
         elif self.event_data.start_time:
             if self.event_data.end_time:
-                time_text = f"🕐 {self.event_data.start_time.strftime('%H:%M')} - {self.event_data.end_time.strftime('%H:%M')}"
+                time_text = f"🕐 {self.event_data.start_time.strftime('%H:%M')} - {self.event_data.end_time.strftime('%H:%M')}"  # noqa: E501
             else:
                 time_text = f"🕐 {self.event_data.start_time.strftime('%H:%M')}"
         else:
@@ -221,14 +218,15 @@ class EventItemWidget(QFrame):
         )
 
         # Set a very subtle background
-        self.setStyleSheet(
-            f"""
+        red = int(color[1:3], 16)
+        green = int(color[3:5], 16)
+        blue = int(color[5:7], 16)
+        self.setStyleSheet(f"""
             EventItemWidget {{
                 border-left: 3px solid {color};
-                background-color: rgba({int(color[1:3], 16)}, {int(color[3:5], 16)}, {int(color[5:7], 16)}, 0.1);
+                background-color: rgba({red}, {green}, {blue}, 0.1);
             }}
-        """
-        )
+        """)
 
     def update_event(self, event: Event):
         """🔄 Update event data."""
@@ -242,7 +240,7 @@ class EventItemWidget(QFrame):
             time_text = f"🕐 {_('events.all_day', default='All day')}"
         elif event.start_time:
             if event.end_time:
-                time_text = f"🕐 {event.start_time.strftime('%H:%M')} - {event.end_time.strftime('%H:%M')}"
+                time_text = f"🕐 {event.start_time.strftime('%H:%M')} - {event.end_time.strftime('%H:%M')}"  # noqa: E501
             else:
                 time_text = f"🕐 {event.start_time.strftime('%H:%M')}"
         else:
@@ -517,7 +515,7 @@ class EventPanel(QWidget):
                 f"❌ {_('error_no_event_manager', default='No Event Manager')}",
                 _(
                     "error_event_manager_unavailable",
-                    default="Event manager is not available. Please check the application setup.",
+                    default="Event manager is not available. Please check the application setup.",  # noqa: E501
                 ),
             )
             return
@@ -555,10 +553,10 @@ class EventPanel(QWidget):
                         event_to_edit = master_event
                         QMessageBox.information(
                             self,
-                            f"🔄 {_('events.edit_recurring_event', default='Edit Recurring Event')}",
+                            f"🔄 {_('events.edit_recurring_event', default='Edit Recurring Event')}",  # noqa: E501
                             _(
                                 "events.editing_master_event",
-                                default="You are editing the master recurring event. Changes will affect all occurrences.",
+                                default="You are editing the master recurring event. Changes will affect all occurrences.",  # noqa: E501
                             ),
                         )
                     else:
@@ -604,8 +602,8 @@ class EventPanel(QWidget):
         if event.id is None and event.recurrence_master_id:
             # This is a generated occurrence - offer options using custom dialog
             dialog = CustomDeleteDialog(
-                title=f"{UI_EMOJIS['delete_event']} {_('events.delete_recurring_occurrence', default='Delete Recurring Event')}",
-                message=f"🔄 {_('confirm_delete_recurring_message', default='This is a recurring event occurrence. What would you like to do?')}",
+                title=f"{UI_EMOJIS['delete_event']} {_('events.delete_recurring_occurrence', default='Delete Recurring Event')}",  # noqa: E501
+                message=f"🔄 {_('confirm_delete_recurring_message', default='This is a recurring event occurrence. What would you like to do?')}",  # noqa: E501
                 event_title=event.get_display_title(),
                 parent=self,
             )
@@ -626,11 +624,11 @@ class EventPanel(QWidget):
                             f"✅ {_('info_title', default='Information')}",
                             _(
                                 "events.exception_added_successfully",
-                                default="This occurrence has been successfully excluded from the recurring event series.",
+                                default="This occurrence has been successfully excluded from the recurring event series.",  # noqa: E501
                             ),
                         )
                         logger.debug(
-                            f"✅ Added exception date {event.start_date} to recurring event: {event.get_display_title()}"
+                            f"✅ Added exception date {event.start_date} to recurring event: {event.get_display_title()}"  # noqa: E501
                         )
                     else:
                         QMessageBox.warning(
@@ -638,7 +636,7 @@ class EventPanel(QWidget):
                             f"❌ {_('error_title', default='Error')}",
                             _(
                                 "events.exception_add_failed",
-                                default="Failed to exclude this occurrence. Please try again.",
+                                default="Failed to exclude this occurrence. Please try again.",  # noqa: E501
                             ),
                         )
                 except Exception as e:
@@ -655,7 +653,7 @@ class EventPanel(QWidget):
                         self.refresh_events()  # Refresh to remove all occurrences
                         self.event_deleted.emit(event)
                         logger.debug(
-                            f"🗑️ Deleted recurring event series: {event.get_display_title()}"
+                            f"🗑️ Deleted recurring event series: {event.get_display_title()}"  # noqa: E501
                         )
                     else:
                         QMessageBox.warning(
@@ -680,10 +678,10 @@ class EventPanel(QWidget):
         # Confirm deletion
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle(
-            f"{UI_EMOJIS['delete_event']} {_('events.delete_event', default='Delete Event')}"
+            f"{UI_EMOJIS['delete_event']} {_('events.delete_event', default='Delete Event')}"  # noqa: E501
         )
         msg_box.setText(
-            f"🗑️ {_('confirm_delete_event_message', default='Are you sure you want to delete this event?')}\n\n{event.get_display_title()}"
+            f"🗑️ {_('confirm_delete_event_message', default='Are you sure you want to delete this event?')}\n\n{event.get_display_title()}"  # noqa: E501
         )
         msg_box.setIcon(QMessageBox.Icon.Question)
 
@@ -696,7 +694,7 @@ class EventPanel(QWidget):
         )
         msg_box.setDefaultButton(no_button)
 
-        reply = msg_box.exec()
+        msg_box.exec()
         clicked_button = msg_box.clickedButton()
 
         if clicked_button == yes_button:
@@ -729,17 +727,17 @@ class EventPanel(QWidget):
         if not self.event_manager:
             QMessageBox.information(
                 self,
-                f"{UI_EMOJIS['import']} {_('info_import_events', default='Import Events')}",
+                f"{UI_EMOJIS['import']} {_('info_import_events', default='Import Events')}",  # noqa: E501
                 _(
                     "info_import_placeholder",
-                    default="Import functionality will be implemented in the event panel.",
+                    default="Import functionality will be implemented in the event panel.",  # noqa: E501
                 ),
             )
             return
 
         try:
             # Open file dialog
-            file_path, _ = QFileDialog.getOpenFileName(
+            file_path, _selected_filter = QFileDialog.getOpenFileName(
                 self,
                 f"{UI_EMOJIS['import']} Import Events",
                 "",
@@ -757,7 +755,9 @@ class EventPanel(QWidget):
                     )
                 else:
                     QMessageBox.warning(
-                        self, "⚠️ Unsupported Format", "Please select a CSV or ICS file."
+                        self,
+                        "⚠️ Unsupported Format",
+                        "Please select a CSV or ICS file.",
                     )
 
         except Exception as e:
@@ -796,7 +796,7 @@ class EventPanel(QWidget):
                             )
                             continue
 
-                        # Expected format: Title, Description, Category, Date, Start Time, End Time, All Day
+                        # Expected format: Title, Description, Category, Date, Start Time, End Time, All Day  # noqa: E501
                         title = row[0].strip()
                         description = row[1].strip() if len(row) > 1 else ""
                         category = row[2].strip() if len(row) > 2 else "default"
@@ -873,7 +873,7 @@ class EventPanel(QWidget):
                                 event_date
                             )
 
-                            # Check if an event with the same title, date, and time already exists
+                            # Check if an event with the same title, date, and time already exists  # noqa: E501
                             is_duplicate = False
                             for existing_event in existing_events:
                                 if (
@@ -888,7 +888,7 @@ class EventPanel(QWidget):
 
                             if is_duplicate:
                                 errors.append(
-                                    f"Row {row_num}: Duplicate event skipped - '{title}' on {event_date}"
+                                    f"Row {row_num}: Duplicate event skipped - '{title}' on {event_date}"  # noqa: E501
                                 )
                                 continue
 
@@ -917,7 +917,7 @@ class EventPanel(QWidget):
                         errors.append(f"Row {row_num}: {str(e)}")
 
             # Show results
-            message = f"📥 Import completed!\n\n"
+            message = "📥 Import completed!\n\n"
             message += f"✅ Successfully imported: {imported_count} events\n"
 
             if errors:
@@ -950,17 +950,17 @@ class EventPanel(QWidget):
         if not self.event_manager:
             QMessageBox.information(
                 self,
-                f"{UI_EMOJIS['export']} {_('info_export_events', default='Export Events')}",
+                f"{UI_EMOJIS['export']} {_('info_export_events', default='Export Events')}",  # noqa: E501
                 _(
                     "info_export_placeholder",
-                    default="Export functionality will be implemented in the event panel.",
+                    default="Export functionality will be implemented in the event panel.",  # noqa: E501
                 ),
             )
             return
 
         try:
             # Open file dialog
-            file_path, _ = QFileDialog.getSaveFileName(
+            file_path, _selected_filter = QFileDialog.getSaveFileName(
                 self,
                 f"{UI_EMOJIS['export']} Export Events",
                 "calendar_events.csv",
@@ -1038,7 +1038,7 @@ class EventPanel(QWidget):
                 QMessageBox.information(
                     self,
                     f"{UI_EMOJIS['export']} Export Complete",
-                    f"📤 Successfully exported {len(unique_events)} events to:\n{file_path}",
+                    f"📤 Successfully exported {len(unique_events)} events to:\n{file_path}",  # noqa: E501
                 )
 
         except Exception as e:
@@ -1071,7 +1071,9 @@ class EventPanel(QWidget):
                 logger.debug(f"✅ Created event: {event.get_display_title()}")
             else:
                 QMessageBox.warning(
-                    self, "⚠️ Save Failed", "Failed to save the event. Please try again."
+                    self,
+                    "⚠️ Save Failed",
+                    "Failed to save the event. Please try again.",
                 )
 
         except Exception as e:
@@ -1114,7 +1116,7 @@ class EventPanel(QWidget):
         try:
             # Update button texts
             self.add_event_btn.setText(
-                f"{UI_EMOJIS['add_event']} {_('toolbar.add_event', default='Add Event')}"
+                f"{UI_EMOJIS['add_event']} {_('toolbar.add_event', default='Add Event')}"  # noqa: E501
             )
             self.import_btn.setText(
                 f"{UI_EMOJIS['import']} {_('import_export.import', default='Import')}"

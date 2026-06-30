@@ -1,6 +1,8 @@
 {
   "No": "No",
   "Yes": "Yes",
+  "label_holiday_country": "Public holidays",
+  "holiday_country_auto": "Auto (from timezone)",
   "_metadata": {
     "all_locales_fixed": true,
     "audit_date": "2025-06-25 21:48:49",
@@ -255,10 +257,10 @@
   "delete_warning": "This action cannot be undone! Export your data first.",
   "description": "Description",
   "dev_author": "Author",
-  "dev_testing": "Testing",
+  "dev_testing": "Initial UI Testing",
   "dev_testing_value": "Ramon Rodriguez",
   "dev_built_with": "Built with",
-  "dev_built_with_value": "Python, PySide6, FastAPI, attention to detail and LOTS of caffeine! ☕",
+  "dev_built_with_value": "Python, PySide6, FastAPI, attention to detail and LOTS of caffeine.",
   "dialogs.confirm_delete_note": "Are you sure you want to delete this note?",
   "dialogs.delete": "Delete",
   "dialogs.error_title": "Error",

@@ -3,8 +3,8 @@
 Calendifier Build Script
 ========================
 
-A simple build script that uses PyInstaller to compile Calendifier into a standalone executable
-and handles LGPL3 license compliance.
+A simple build script that uses PyInstaller to compile Calendifier into a
+standalone executable and handles LGPL3 license compliance.
 
 Usage:
     python build.py [options]
@@ -40,7 +40,7 @@ SPEC_FILE = "calendifier.spec"
 def ensure_pyinstaller_installed():
     """Check if PyInstaller is installed, and install it if not."""
     try:
-        import PyInstaller
+        import PyInstaller  # noqa: F401  (imported to test availability)
 
         print("✅ PyInstaller is already installed")
         return True
@@ -69,8 +69,8 @@ def clean_output_directory():
             print(f"🧹 Cleaned output directory: {OUTPUT_DIR}")
         except PermissionError:
             print(f"⚠️ Could not clean {OUTPUT_DIR} directory (permission denied)")
-            print(f"   This is likely because the executable is still running.")
-            print(f"   Please close the application and try again.")
+            print("   This is likely because the executable is still running.")
+            print("   Please close the application and try again.")
             sys.exit(1)
 
     # Create fresh directory
@@ -82,9 +82,9 @@ def clean_output_directory():
     if build_path.exists():
         try:
             shutil.rmtree(build_path)
-            print(f"🧹 Cleaned build directory")
+            print("🧹 Cleaned build directory")
         except PermissionError:
-            print(f"⚠️ Could not clean build directory (permission denied)")
+            print("⚠️ Could not clean build directory (permission denied)")
 
     spec_path = Path(SPEC_FILE)
     if spec_path.exists():
@@ -92,7 +92,7 @@ def clean_output_directory():
             spec_path.unlink()
             print(f"🧹 Removed spec file: {SPEC_FILE}")
         except PermissionError:
-            print(f"⚠️ Could not remove spec file (permission denied)")
+            print("⚠️ Could not remove spec file (permission denied)")
 
 
 def copy_license_files():
@@ -145,11 +145,11 @@ In compliance with LGPL3 requirements:
 2. LIBRARY REPLACEMENT:
    While this is a single-file executable, the LGPL3 license grants you the right
    to replace the PySide6 libraries. To exercise this right:
-   
+
    a) Download the Calendifier source code from the repository above
    b) Replace the PySide6 dependency in requirements.txt with your preferred version
    c) Rebuild the application using the provided build script
-   
+
 3. LGPL3 LICENSE:
    The full LGPL3 license text is available at:
    https://www.gnu.org/licenses/lgpl-3.0.html
@@ -188,8 +188,8 @@ def build_with_pyinstaller(debug=False, console=False):
     # Check if data files exist before adding them
     data_files = [
         "calendar_app/localization/translations;calendar_app/localization/translations",
-        "calendar_app/localization/locale_holiday_translations;calendar_app/localization/locale_holiday_translations",
-        "calendar_app/localization/country_translations;calendar_app/localization/country_translations",
+        "calendar_app/localization/locale_holiday_translations;calendar_app/localization/locale_holiday_translations",  # noqa: E501
+        "calendar_app/localization/country_translations;calendar_app/localization/country_translations",  # noqa: E501
         "assets;assets",
     ]
 
@@ -261,7 +261,7 @@ def build_with_pyinstaller(debug=False, console=False):
     # Build command
     cmd = [sys.executable, "-m", "PyInstaller"] + options + [main_to_build]
 
-    print(f"🔨 Running PyInstaller compilation...")
+    print("🔨 Running PyInstaller compilation...")
     if debug:
         print(f"Command: {' '.join(cmd)}")
 
@@ -313,24 +313,28 @@ def main():
     # Set UTF-8 encoding environment variables
     os.environ['PYTHONIOENCODING'] = 'utf-8'
     os.environ['PYTHONUTF8'] = '1'
-    
+
     # Force UTF-8 for stdout/stderr
     if hasattr(sys, '_MEIPASS'):  # Running as PyInstaller bundle
         try:
             # Try to set UTF-8 encoding for streams
             import io
-            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='ignore')
-            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='ignore')
-        except:
+            sys.stdout = io.TextIOWrapper(
+                sys.stdout.buffer, encoding='utf-8', errors='ignore'
+            )
+            sys.stderr = io.TextIOWrapper(
+                sys.stderr.buffer, encoding='utf-8', errors='ignore'
+            )
+        except Exception:
             # If that fails, redirect to null to prevent crashes
             sys.stdout = open(os.devnull, 'w', encoding='utf-8')
             sys.stderr = open(os.devnull, 'w', encoding='utf-8')
-    
+
     # Import and run the actual main application
     try:
         # Import the main module
         import main
-        
+
         # Run the main function if it exists
         if hasattr(main, 'main'):
             main.main()
@@ -434,7 +438,7 @@ def main():
         try:
             wrapper_file.unlink()
             print("🧹 Cleaned up wrapper script")
-        except:
+        except Exception:
             pass
 
     if success:
@@ -461,7 +465,7 @@ def main():
             # Debugging instructions
             print("\n🔍 DEBUGGING INSTRUCTIONS:")
             print("If the exe doesn't run when double-clicked, try this:")
-            print(f"1. Open Command Prompt")
+            print("1. Open Command Prompt")
             print(f"2. Navigate to: {Path(OUTPUT_DIR).absolute()}")
             print(f"3. Run: {exe_name}")
             print("4. This will show any error messages")
@@ -478,7 +482,8 @@ def main():
                     print("💡 Try running from command prompt to see error details.")
             else:
                 print(
-                    "ℹ️ Application built successfully but not launched (use --launch to launch)"
+                    "ℹ️ Application built successfully but not launched "
+                    "(use --launch to launch)"
                 )
         else:
             print(f"⚠️ Expected executable not found: {exe_path}")

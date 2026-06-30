@@ -1,16 +1,68 @@
 """
 📅 Calendar Application Version Information
 
-This module contains version information and emoji constants used throughout the application.
+This module contains version information and emoji constants used across the app.
+The single source of truth for the version is the ``VERSION`` file at the repo root;
+nothing here hardcodes a release number.
 """
 
-__version__ = "1.6.3"
-__version_info__ = (1, 6, 3)
+import sys
+from pathlib import Path
+
+# Sentinel used when the VERSION file cannot be located (e.g. partial checkout).
+_DEV_VERSION = "0.0.0-dev"
+
+
+def _read_version() -> str:
+    """Read the version string from the root VERSION file (frozen-aware)."""
+    candidates = []
+    bundle_dir = getattr(sys, "_MEIPASS", None)
+    if bundle_dir:
+        candidates.append(Path(bundle_dir) / "VERSION")
+    candidates.append(Path(__file__).resolve().parent / "VERSION")
+    for path in candidates:
+        try:
+            text = path.read_text(encoding="utf-8").strip()
+        except OSError:
+            continue
+        if text:
+            return text
+    return _DEV_VERSION  # pragma: no cover - VERSION is always present in real builds
+
+
+def _parse_version_info(version: str) -> tuple:
+    """Turn '1.7.0' (or '1.7.0-dev') into a (major, minor, patch) tuple."""
+    parts = []
+    for component in version.split("-")[0].split(".")[:3]:
+        try:
+            parts.append(int(component))
+        except ValueError:
+            parts.append(0)
+    while len(parts) < 3:
+        parts.append(0)
+    return tuple(parts)
+
+
+__version__ = _read_version()
+__version_info__ = _parse_version_info(__version__)
 __app_name__ = "📅 Calendifier"
 __author__ = "Oliver Ernster"
-__description__ = "Cross-platform calendar system with Home Assistant integration, analog clock, event handling, note taking, and holidays"
-__copyright__ = "© 2025 Oliver Ernster"
-__license__ = "MIT"
+__description__ = (
+    "Cross-platform calendar system with Home Assistant integration, "
+    "analog clock, event handling, note taking, and holidays"
+)
+__copyright__ = "© 2026 Oliver Ernster"
+__license__ = "LGPL-3.0"
+
+# 📦 Packaging identity (consumed by the build scripts and the bespoke installer).
+# Plain display name without the emoji, for exe/registry/shortcut/bundle naming.
+APP_NAME = "Calendifier"
+# Previous per-user data folder name; kept equal as there is no rename to migrate.
+LEGACY_APP_NAME = "Calendifier"
+APP_AUTHOR = __author__
+APP_COPYRIGHT = __copyright__
+# Stable Windows AppUserModelID for taskbar grouping / pinned-icon identity.
+APP_APPUSERMODELID = "com.oliverernster.calendifier"
 
 # 📅 Application metadata
 APP_ICON = "📅"

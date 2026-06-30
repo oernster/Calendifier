@@ -334,7 +334,7 @@ def get_implementation_progress():
     Get current implementation progress.
 
     Returns:
-        ImplementationProgress: Progress information or None if implementation not available
+        ImplementationProgress: Progress info, or None if not available
     """
     implementation = get_batch_implementation()
     if implementation:
@@ -391,7 +391,7 @@ def get_system_info() -> Dict[str, Any]:
                     "overall_coverage": coverage_report.overall_coverage,
                     "incomplete_locales": coverage_report.incomplete_locales,
                 }
-            except:
+            except Exception:
                 info["validation_status"] = {"error": "Validation failed"}
 
         # Add implementation progress if available
@@ -404,7 +404,7 @@ def get_system_info() -> Dict[str, Any]:
                     "quality_score": progress.quality_score,
                     "zero_fallback_locales": progress.zero_fallback_locales,
                 }
-            except:
+            except Exception:
                 info["implementation_progress"] = {"error": "Progress unavailable"}
 
         return info
@@ -435,7 +435,7 @@ BATCH_INFO = {
             "ar_SA",
         ],
         "priority": 1,
-        "description": "Core international languages covering 3.5+ billion speakers worldwide",
+        "description": "Core international languages, 3.5+ billion speakers",
     }
 }
 

@@ -6,7 +6,7 @@ This module handles dark/light theme definitions and switching.
 
 import logging
 from typing import Dict, Any, Optional
-from version import __version__, UI_EMOJIS, THEME_DARK_ICON, THEME_LIGHT_ICON
+from version import __version__, THEME_DARK_ICON, THEME_LIGHT_ICON
 
 logger = logging.getLogger(__name__)
 
@@ -78,8 +78,8 @@ class ThemeManager:
                 "clock_center": "#ffffff",
             },
             "fonts": {
-                "family": 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                "family_mono": '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
+                "family": 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',  # noqa: E501
+                "family_mono": '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',  # noqa: E501
                 "size_small": 10,
                 "size_normal": 12,
                 "size_large": 14,
@@ -146,8 +146,8 @@ class ThemeManager:
                 "clock_center": "#000000",
             },
             "fonts": {
-                "family": 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                "family_mono": '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
+                "family": 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',  # noqa: E501
+                "family_mono": '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',  # noqa: E501
                 "size_small": 10,
                 "size_normal": 12,
                 "size_large": 14,

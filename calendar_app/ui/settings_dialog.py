@@ -5,7 +5,6 @@ This module contains the settings configuration dialog.
 """
 
 import logging
-from typing import Optional
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -15,21 +14,21 @@ from PySide6.QtWidgets import (
     QLabel,
     QComboBox,
     QSpinBox,
-    QCheckBox,
     QPushButton,
     QGroupBox,
-    QFormLayout,
     QListWidget,
     QListWidgetItem,
     QMessageBox,
     QDialogButtonBox,
-    QLineEdit,
     QInputDialog,
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 
 from calendar_app.config.settings import SettingsManager
 from calendar_app.config.themes import ThemeManager
+from calendar_app.core.multi_country_holiday_provider import (
+    MultiCountryHolidayProvider,
+)
 from calendar_app.localization.i18n_manager import get_i18n_manager
 
 
@@ -43,12 +42,12 @@ def _(key: str, **kwargs) -> str:
         if result == key and default != key:
             return default
         return result
-    except Exception as e:
+    except Exception:
         # Fallback to default or key if translation fails
         return kwargs.get("default", key)
 
 
-from version import UI_EMOJIS, get_version_string
+from version import UI_EMOJIS  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -150,10 +149,48 @@ class GeneralSettingsWidget(QWidget):
         duration_row.addStretch()
         calendar_layout.addLayout(duration_row)
 
+        # Holiday country row - which country's public holidays are shown
+        holiday_row = QHBoxLayout()
+        holiday_label = QLabel(
+            f"{_('label_holiday_country', default='Public holidays')}"
+        )
+        holiday_label.setStyleSheet("border: none; padding: 0; margin: 0;")
+        self.holiday_country_combo = QComboBox()
+        self.holiday_country_combo.setMinimumWidth(180)
+        self._populate_holiday_country_combo()
+        holiday_row.addWidget(holiday_label)
+        holiday_row.addWidget(self.holiday_country_combo)
+        holiday_row.addStretch()
+        calendar_layout.addLayout(holiday_row)
+
+        # Holiday country hint
+        holiday_hint = QLabel(
+            _(
+                "info_holiday_country",
+                default="Choose 'Auto' to follow your timezone, or pick a specific country.",  # noqa: E501
+            )
+        )
+        holiday_hint.setStyleSheet("font-size: 10px; color: #cccccc; margin-top: 2px;")
+        holiday_hint.setWordWrap(True)
+        calendar_layout.addWidget(holiday_hint)
+
         layout.addWidget(calendar_group)
 
         # Add stretch
         layout.addStretch()
+
+    def _populate_holiday_country_combo(self):
+        """🌍 Populate the holiday-country combo (Auto + every supported country)."""
+        self.holiday_country_combo.clear()
+        self.holiday_country_combo.addItem(
+            f"🌍 {_('holiday_country_auto', default='Auto (from timezone)')}",
+            MultiCountryHolidayProvider.AUTO_COUNTRY,
+        )
+        self.holiday_country_combo.insertSeparator(1)
+        for country_code, info in MultiCountryHolidayProvider.get_sorted_countries():
+            self.holiday_country_combo.addItem(
+                f"{info['flag']} {info['name']}", country_code
+            )
 
     def _load_settings(self):
         """📥 Load current settings."""
@@ -174,6 +211,12 @@ class GeneralSettingsWidget(QWidget):
 
         self.default_duration.setValue(calendar_settings["default_event_duration"])
 
+        # Holiday country ("auto" or a specific country code)
+        holiday_country = self.settings_manager.get_holiday_country()
+        holiday_index = self.holiday_country_combo.findData(holiday_country)
+        if holiday_index >= 0:
+            self.holiday_country_combo.setCurrentIndex(holiday_index)
+
     def save_settings(self):
         """💾 Save settings."""
         try:
@@ -190,6 +233,11 @@ class GeneralSettingsWidget(QWidget):
             self.settings_manager.set_default_event_duration(
                 self.default_duration.value()
             )
+
+            # Holiday country
+            holiday_country_data = self.holiday_country_combo.currentData()
+            if holiday_country_data:
+                self.settings_manager.set_holiday_country(holiday_country_data)
 
             return True
 
@@ -219,6 +267,19 @@ class GeneralSettingsWidget(QWidget):
                     widget.setText(_("label_display_options"))
                 elif _("label_default_event_duration") in text or "Default" in text:
                     widget.setText(_("label_default_event_duration"))
+                elif _("label_holiday_country") in text or "Public holidays" in text:
+                    widget.setText(
+                        _("label_holiday_country", default="Public holidays")
+                    )
+
+            # Update holiday country combo (preserve selection, retranslate Auto)
+            if hasattr(self, "holiday_country_combo"):
+                current_data = self.holiday_country_combo.currentData()
+                self._populate_holiday_country_combo()
+                if current_data:
+                    index = self.holiday_country_combo.findData(current_data)
+                    if index >= 0:
+                        self.holiday_country_combo.setCurrentIndex(index)
 
             # Update theme combo box
             if hasattr(self, "theme_combo"):
@@ -337,7 +398,7 @@ class NTPSettingsWidget(QWidget):
         timezone_info = QLabel(
             _(
                 "info_timezone_setting",
-                default="Select 'Auto' to use system timezone, or choose a specific timezone",
+                default="Select 'Auto' to use system timezone, or choose a specific timezone",  # noqa: E501
             )
         )
         timezone_info.setStyleSheet("font-size: 10px; color: #cccccc; margin-top: 5px;")
@@ -495,7 +556,7 @@ class NTPSettingsWidget(QWidget):
             )
             msg_box.setDefaultButton(no_button)
 
-            reply = msg_box.exec()
+            msg_box.exec()
             clicked_button = msg_box.clickedButton()
 
             if clicked_button == yes_button:
@@ -519,7 +580,7 @@ class NTPSettingsWidget(QWidget):
         )
         msg_box.setDefaultButton(no_button)
 
-        reply = msg_box.exec()
+        msg_box.exec()
         clicked_button = msg_box.clickedButton()
 
         if clicked_button == yes_button:
@@ -589,7 +650,7 @@ class NTPSettingsWidget(QWidget):
                     widget.setText(
                         _(
                             "info_timezone_setting",
-                            default="Select 'Auto' to use system timezone, or choose a specific timezone",
+                            default="Select 'Auto' to use system timezone, or choose a specific timezone",  # noqa: E501
                         )
                     )
                 elif "configure" in text.lower() or "ntp" in text.lower():
@@ -641,7 +702,7 @@ class HolidaySettingsWidget(QWidget):
 
         # Holiday preview section (only section now)
         preview_group = QGroupBox(
-            f"📅 {_('settings_holiday_preview', default='Holiday Preview for Current Year')}"
+            f"📅 {_('settings_holiday_preview', default='Holiday Preview for Current Year')}"  # noqa: E501
         )
         preview_group.setStyleSheet(
             "QGroupBox { font-weight: bold; padding-top: 10px; border: none; }"
@@ -653,7 +714,7 @@ class HolidaySettingsWidget(QWidget):
         preview_info = QLabel(
             _(
                 "settings_holiday_preview_info",
-                default="These are the holidays that will be displayed in your calendar:",
+                default="These are the holidays that will be displayed in your calendar:",  # noqa: E501
             )
         )
         preview_info.setStyleSheet(
@@ -665,8 +726,7 @@ class HolidaySettingsWidget(QWidget):
         self.holiday_list = QListWidget()
         self.holiday_list.setMinimumHeight(160)
         self.holiday_list.setMaximumHeight(180)
-        self.holiday_list.setStyleSheet(
-            """
+        self.holiday_list.setStyleSheet("""
             QListWidget {
                 background-color: #2d2d2d;
                 border: 1px solid #555555;
@@ -687,8 +747,7 @@ class HolidaySettingsWidget(QWidget):
                 background-color: #007acc;
                 color: #ffffff;
             }
-        """
-        )
+        """)
         preview_layout.addWidget(self.holiday_list)
 
         # No refresh button needed - holidays load automatically
@@ -762,13 +821,18 @@ class HolidaySettingsWidget(QWidget):
 
                         # Create tooltip with translated weekday and month
                         weekday = weekday_names[holiday.date.weekday()]
-                        tooltip_str = f"{weekday}, {holiday.date.day} {month} {holiday.date.year}\n{holiday.name}"
+                        tooltip_str = (
+                            f"{weekday}, {holiday.date.day} {month} "
+                            f"{holiday.date.year}\n{holiday.name}"
+                        )
 
                         item = QListWidgetItem(item_text)
                         item.setToolTip(tooltip_str)
                         self.holiday_list.addItem(item)
                     except Exception as date_error:
-                        logger.warning(f"⚠️ Failed to format holiday date: {date_error}")
+                        logger.warning(
+                            f"⚠️ Failed to format holiday date: {date_error}"
+                        )
                         # Fallback to English formatting
                         date_str = holiday.date.strftime("%B %d")
                         item_text = f"{date_str} - {holiday.name}"
@@ -817,7 +881,7 @@ class HolidaySettingsWidget(QWidget):
                 title = widget.title()
                 if "📅" in title:
                     widget.setTitle(
-                        f"📅 {_('settings_holiday_preview', default='Holiday Preview for Current Year')}"
+                        f"📅 {_('settings_holiday_preview', default='Holiday Preview for Current Year')}"  # noqa: E501
                     )
 
             # Update labels
@@ -830,7 +894,7 @@ class HolidaySettingsWidget(QWidget):
                     widget.setText(
                         _(
                             "settings_holiday_preview_info",
-                            default="These are the holidays that will be displayed in your calendar:",
+                            default="These are the holidays that will be displayed in your calendar:",  # noqa: E501
                         )
                     )
 
@@ -866,7 +930,8 @@ class SettingsDialog(QDialog):
     def _setup_ui(self):
         """🏗️ Setup settings dialog UI."""
         self.setWindowTitle(
-            f"{UI_EMOJIS['settings']} {_('settings_dialog_title', app_name=_('app_name'))}"
+            f"{UI_EMOJIS['settings']} "
+            f"{_('settings_dialog_title', app_name=_('app_name'))}"
         )
         self.setModal(True)
         self.resize(600, 500)
@@ -886,8 +951,7 @@ class SettingsDialog(QDialog):
 
         # Tab widget
         self.tab_widget = QTabWidget()
-        self.tab_widget.setStyleSheet(
-            """
+        self.tab_widget.setStyleSheet("""
             QTabWidget::pane {
                 border: 1px solid #c0c0c0;
                 background-color: #404040;
@@ -914,8 +978,7 @@ class SettingsDialog(QDialog):
                 background-color: #353535;
                 color: #ffffff;
             }
-        """
-        )
+        """)
 
         # General settings tab
         self.general_tab = GeneralSettingsWidget(
@@ -1010,7 +1073,8 @@ class SettingsDialog(QDialog):
         try:
             # Update window title
             self.setWindowTitle(
-                f"{UI_EMOJIS['settings']} {_('settings_dialog_title', app_name=_('app_name'))}"
+                f"{UI_EMOJIS['settings']} "
+                f"{_('settings_dialog_title', app_name=_('app_name'))}"
             )
 
             # Update tab names

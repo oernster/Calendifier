@@ -5,13 +5,12 @@ This module contains the event creation and editing dialog.
 """
 
 import logging
-from datetime import date, time, datetime
+from datetime import date, time
 from typing import Optional
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
-    QFormLayout,
     QLabel,
     QLineEdit,
     QTextEdit,
@@ -25,12 +24,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from PySide6.QtCore import Qt, QDate, QTime, Signal, QTimer
-from PySide6.QtGui import QFont
 
 from calendar_app.data.models import Event
 from calendar_app.localization import get_i18n_manager
 from calendar_app.localization.i18n_manager import convert_numbers
-from calendar_app.ui.rrule_dialog import show_rrule_dialog
 from version import UI_EMOJIS, EVENT_CATEGORY_EMOJIS
 
 logger = logging.getLogger(__name__)
@@ -46,7 +43,7 @@ def _(key: str, **kwargs) -> str:
         if result == key and default != key:
             return default
         return result
-    except Exception as e:
+    except Exception:
         # Fallback to default or key if translation fails
         return kwargs.get("default", key)
 
@@ -79,7 +76,8 @@ class EventDialog(QDialog):
         self._calendar_conversion_timer.start(500)  # Update every 500ms
 
         logger.debug(
-            f"📝 Event dialog initialized ({'editing' if self.is_editing else 'creating'})"
+            f"📝 Event dialog initialized "
+            f"({'editing' if self.is_editing else 'creating'})"
         )
 
     def _setup_ui(self):
@@ -97,7 +95,8 @@ class EventDialog(QDialog):
         layout.setSpacing(16)
         layout.setContentsMargins(16, 16, 16, 16)
 
-        # Use VBoxLayout with HBoxLayout rows instead of QFormLayout to avoid label borders
+        # Use VBoxLayout with HBoxLayout rows instead of QFormLayout
+        # to avoid label borders
         form_widget = QWidget()
         form_layout = QVBoxLayout(form_widget)
         form_layout.setSpacing(12)
@@ -302,8 +301,8 @@ class EventDialog(QDialog):
                 border-color: #004578;
             }
             QPushButton:disabled {
-                background-color: #004578;  /* Darker blue when disabled (instead of grey) */
-                color: #b3d9ff;             /* Light blue text when disabled (still readable) */
+                background-color: #004578;  /* Darker blue when disabled */
+                color: #b3d9ff;             /* Light blue text when disabled */
                 border-color: #003d66;
             }
             """
@@ -420,7 +419,8 @@ class EventDialog(QDialog):
             QMessageBox.critical(
                 self,
                 f"❌ {_('error_title', default='Error')}",
-                f"{_('recurring.error.invalid_rrule', default='Invalid recurrence pattern')}\n{str(e)}",
+                f"{_('recurring.error.invalid_rrule', default='Invalid recurrence pattern')}"  # noqa: E501
+                f"\n{str(e)}",
             )
 
     def _update_pattern_description(self):
@@ -615,7 +615,8 @@ class EventDialog(QDialog):
             # Update Qt widgets locale (QDateEdit, QTimeEdit)
             self._refresh_qt_widgets_locale()
 
-            # Trigger delayed numeral conversion to ensure Qt widgets are fully initialized
+            # Trigger delayed numeral conversion to ensure Qt widgets
+            # are fully initialized
             QTimer.singleShot(100, self._delayed_numeral_conversion)
 
             # Update button texts
@@ -711,9 +712,11 @@ class EventDialog(QDialog):
                 ),
             }
 
-            # Special handling for Hindi and Thai - use Arabic locale to get numeral conversion
+            # Special handling for Hindi and Thai - use Arabic locale to
+            # get numeral conversion
             if current_locale in ["hi_IN", "th_TH"]:
-                # Use Arabic locale for Qt to enable numeral conversion, then convert to target numerals
+                # Use Arabic locale for Qt to enable numeral conversion,
+                # then convert to target numerals
                 qt_locale = QLocale(
                     QLocale.Language.Arabic, QLocale.Country.SaudiArabia
                 )
@@ -757,7 +760,8 @@ class EventDialog(QDialog):
                 self._apply_numeral_conversion_to_time_widget(self.end_time_edit)
 
             logger.debug(
-                f"🌍 Updated Qt widgets locale to: {current_locale} ({qt_locale.name()})"
+                f"🌍 Updated Qt widgets locale to: {current_locale} "
+                f"({qt_locale.name()})"
             )
 
         except Exception as e:
@@ -861,7 +865,8 @@ class EventDialog(QDialog):
                 if label.text() and any(c.isdigit() for c in label.text()):
                     original_text = label.text()
 
-                    # First convert from Arabic-Indic to Western, then to target numerals
+                    # First convert from Arabic-Indic to Western,
+                    # then to target numerals
                     if current_locale == "hi_IN":
                         # Convert Arabic-Indic to Western first
                         western_text = self._arabic_to_western(original_text)

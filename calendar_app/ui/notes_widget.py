@@ -7,7 +7,7 @@ This module contains a tab-based note-taking widget with post-it note styling.
 import logging
 import json
 import os
-from typing import List, Optional
+from typing import List
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -16,10 +16,8 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QPushButton,
     QMessageBox,
-    QTabBar,
 )
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtCore import Signal
 
 from calendar_app.data.models import Note
 from calendar_app.localization import get_i18n_manager
@@ -38,7 +36,7 @@ def _(key: str, **kwargs) -> str:
         if result == key and default != key:
             return default
         return result
-    except Exception as e:
+    except Exception:
         # Fallback to default or key if translation fails
         return kwargs.get("default", key)
 
@@ -91,7 +89,9 @@ class NotesWidget(QWidget):
         button_layout.addWidget(self.add_note_btn)
 
         # Delete note button
-        self.delete_note_btn = QPushButton(f"🗑️ {_('dialogs.delete', default='Delete')}")
+        self.delete_note_btn = QPushButton(
+            f"🗑️ {_('dialogs.delete', default='Delete')}"
+        )
         self.delete_note_btn.clicked.connect(self._delete_current_note)
         self.delete_note_btn.setEnabled(False)
         button_layout.addWidget(self.delete_note_btn)
@@ -118,11 +118,11 @@ class NotesWidget(QWidget):
             background-color: #ffffe0;
             border-radius: 4px;
         }
-        
+
         QTabWidget::tab-bar {
             alignment: left;
         }
-        
+
         QTabBar::tab {
             background-color: #fff8dc;
             border: 1px solid #d4af37;
@@ -134,16 +134,16 @@ class NotesWidget(QWidget):
             color: #333333;
             font-weight: bold;
         }
-        
+
         QTabBar::tab:selected {
             background-color: #ffffe0;
             border-bottom: 2px solid #ffffe0;
         }
-        
+
         QTabBar::tab:hover {
             background-color: #fffacd;
         }
-        
+
         QTextEdit {
             background-color: #ffffe0;
             border: none;
@@ -152,7 +152,7 @@ class NotesWidget(QWidget):
             font-size: 11pt;
             padding: 8px;
         }
-        
+
         QPushButton {
             background-color: #fff8dc;
             border: 1px solid #d4af37;
@@ -161,15 +161,15 @@ class NotesWidget(QWidget):
             color: #333333;
             font-weight: bold;
         }
-        
+
         QPushButton:hover {
             background-color: #fffacd;
         }
-        
+
         QPushButton:pressed {
             background-color: #f0e68c;
         }
-        
+
         QPushButton:disabled {
             background-color: #f5f5dc;
             color: #999999;
@@ -192,6 +192,10 @@ class NotesWidget(QWidget):
             # If no notes exist, create the first default note with empty content
             if not self.notes:
                 self.notes = [Note(id=1, title="1", content="")]
+
+            # Always present notes as a contiguous 1..N sequence, repairing any
+            # legacy gaps (e.g. tabs showing 9, 11) left by past deletions.
+            self._renumber_notes()
 
             # Create tabs for all notes
             self._refresh_tabs()
@@ -243,12 +247,11 @@ class NotesWidget(QWidget):
     def _add_note(self):
         """➕ Add a new note."""
         try:
-            # Find next available ID
-            max_id = max([note.id for note in self.notes]) if self.notes else 0
-            new_id = max_id + 1
+            # The new note takes the next sequential number (1..N, no gaps).
+            new_number = len(self.notes) + 1
 
             # Create new note
-            new_note = Note(id=new_id, title=str(new_id), content="")
+            new_note = Note(id=new_number, title=str(new_number), content="")
             self.notes.append(new_note)
 
             # Add new tab
@@ -259,6 +262,10 @@ class NotesWidget(QWidget):
             # Convert tab title to locale-appropriate numerals for display
             converted_title = convert_numbers(new_note.title)
             tab_index = self.tab_widget.addTab(text_edit, converted_title)
+
+            # Keep ids/titles a contiguous 1..N sequence and refresh tab labels
+            self._renumber_notes()
+            self._refresh_tab_titles()
 
             # Switch to new tab
             self.tab_widget.setCurrentIndex(tab_index)
@@ -297,7 +304,6 @@ class NotesWidget(QWidget):
                 return
 
             # Confirm deletion with custom Arabic buttons
-            note_title = self.notes[current_index].title
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle(_("notes.delete_note", default="Delete Note"))
             msg_box.setText(
@@ -317,7 +323,7 @@ class NotesWidget(QWidget):
             )
             msg_box.setDefaultButton(no_button)
 
-            reply = msg_box.exec()
+            msg_box.exec()
             clicked_button = msg_box.clickedButton()
 
             if clicked_button == yes_button:
@@ -326,6 +332,10 @@ class NotesWidget(QWidget):
 
                 # Remove tab
                 self.tab_widget.removeTab(current_index)
+
+                # Renumber the survivors so they stay a contiguous 1..N sequence
+                self._renumber_notes()
+                self._refresh_tab_titles()
 
                 # Update delete button state
                 self._update_delete_button()
@@ -385,7 +395,8 @@ class NotesWidget(QWidget):
             # Update tab titles with locale-appropriate numerals
             self._refresh_tab_titles()
 
-            # Don't update note content during language changes - keep notes as user entered them
+            # Don't update note content during language changes -
+            # keep notes as user entered them
 
             # Force button updates
             self.add_note_btn.update()
@@ -395,6 +406,18 @@ class NotesWidget(QWidget):
 
         except Exception as e:
             logger.error(f"❌ Failed to refresh notes widget UI text: {e}")
+
+    def _renumber_notes(self):
+        """🔢 Reassign sequential ids/titles so notes are always numbered 1..N.
+
+        Notes are identified purely by position, so deleting one renumbers the
+        rest (deleting note 2 of 1,2,3 leaves 1,2). This repairs any historical
+        gaps in the persisted data as well as keeping new additions contiguous.
+        """
+        for index, note in enumerate(self.notes):
+            number = index + 1
+            note.id = number
+            note.title = str(number)
 
     def _refresh_tab_titles(self):
         """🔄 Refresh tab titles with locale-appropriate numerals."""

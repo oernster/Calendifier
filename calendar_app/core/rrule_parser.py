@@ -3,10 +3,9 @@
 RFC 5545 compliant recurrence rule parsing and generation
 """
 
-import re
 import logging
-from datetime import date, datetime, timedelta
-from typing import Dict, List, Optional, Union, Any
+from datetime import date, datetime
+from typing import List, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -17,7 +16,7 @@ try:
         format_ordinal,
         is_native_number_locale,
     )
-except ImportError:
+except ImportError:  # pragma: no cover - number_formatter ships with the app
     # Fallback if number formatter is not available
     def format_number(
         number: int, locale: str = "en_US", use_native: bool = True
@@ -104,7 +103,7 @@ class RRuleParser:
             from ..localization.i18n_manager import get_i18n_manager
 
             self.i18n_manager = get_i18n_manager()
-        except ImportError:
+        except ImportError:  # pragma: no cover - i18n_manager ships with the app
             self.i18n_manager = None
 
     def parse_rrule(self, rrule_string: str) -> RRuleComponents:
@@ -279,7 +278,7 @@ class RRuleParser:
         """
         try:
             components = self.parse_rrule(rrule)
-            if not components:
+            if not components:  # pragma: no cover - parse_rrule never returns falsy
                 return self._get_text(
                     "recurring.error.invalid_rrule", "Invalid recurrence pattern"
                 )
@@ -322,7 +321,7 @@ class RRuleParser:
                     day_name = self._get_text(day_key, day)
                     weekday_names.append(day_name)
 
-                if weekday_names:
+                if weekday_names:  # pragma: no branch - byday is non-empty here
                     on_text = self._get_text("rrule.description.on", "on")
                     parts.append(f"{on_text} {', '.join(weekday_names)}")
 

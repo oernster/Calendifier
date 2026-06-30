@@ -1,5 +1,7 @@
 # 📅 Calendifier Architecture Documentation
 
+**Version: <!--VERSION-->1.7.0<!--/VERSION-->**
+
 ## Overview
 
 Calendifier is a sophisticated calendar system available in two deployment modes:
@@ -10,6 +12,25 @@ Calendifier is a sophisticated calendar system available in two deployment modes
 Both versions feature comprehensive internationalization supporting **40 languages** and **40 countries**, making it a truly global calendar solution.
 
 This document provides a detailed architecture overview of both deployment modes, explaining the core components, data flow, and integration points.
+
+## Packaging, Versioning & Distribution
+
+- **Single source of truth for the version**: the repo-root [`VERSION`](../VERSION) file. `version.py` reads it at runtime (frozen-aware via `sys._MEIPASS`), `pyproject.toml` consumes it as the dynamic project version, and `stamp_version.py` stamps it into the `<!--VERSION-->1.7.0<!--/VERSION-->` tokens across the docs at build time. No release number is hardcoded elsewhere.
+- **Icons** are generated from the master `calendifier.png` by `generate_icons.py` into `assets/calendar_icon.*` (PNG set, multi-size Windows `.ico`, macOS `.icns`, scalable SVG). `calendar_app/shared/resources.py` resolves the right icon file at runtime for both source and frozen layouts.
+- **Cross-platform packaging** (PyInstaller on every platform):
+  - **Windows**: `buildexe.py` builds the app bundle, then `buildinstaller.py` packages it (via `installer/build_payload.py`) into a bespoke, per-user GUI installer `CalendifierSetup.exe`. The themed installer lives in the `installer/` package (UI, ops, state, shared) and writes a per-user uninstall registry entry plus Start Menu/Desktop shortcuts.
+  - **macOS**: `builddmg.py` (+ `build_utils.py`, `dmg_icon.py`) builds a signed, optionally notarized `calendifier.dmg`.
+  - **Linux**: `build_flatpak.sh` builds the `com.calendifier.Calendar` Flatpak; `cleanup_flatpak.sh` uninstalls and purges flatpak build artefacts.
+- **Holiday region resolution**: the holiday country is an explicit setting (`auto` or an ISO country code). `SettingsManager.get_effective_holiday_country()` resolves `auto` from the selected timezone (via `MultiCountryHolidayProvider.get_country_from_timezone`), then the locale, then GB. The region is deliberately decoupled from the UI language; a language change only re-translates holiday names.
+
+## Testing & Quality
+
+- **100% coverage gate** on the core logic surface (`version`, `stamp_version`, `calendar_app.shared.resources`, `calendar_app.data.models`, `calendar_app.config.settings`, `calendar_app.localization.locale_detector`, `calendar_app.localization.number_formatter`, `calendar_app.core.rrule_parser`, `calendar_app.core.holiday_translations`, `calendar_app.core.multi_country_holiday_provider`, `calendar_app.core.observances`, `calendar_app.core.observance_data`). The gated set is declared once as `[run] include` in `.coveragerc`, so any `--cov` invocation resolves to the same scope; `pyproject.toml` sets `--cov-fail-under=100` and branch coverage. Full policy in [TESTING.md](../TESTING.md).
+- **Structural module-size test.** `tests/unit/test_structural.py` keeps source modules within a 400-line limit (data tables exempt; pre-existing oversized modules tracked as a shrink-only allowlist).
+- **No mocks.** Tests use real objects and real inputs (temporary files, environment variables, the real `holidays` library). Genuinely unreachable defensive branches are marked with justified `# pragma: no cover` / `# pragma: no branch` rather than contrived tests.
+- **Fragile tests isolated.** Qt/UI tests use a real headless `QApplication` and live in `tests/ui`, which is excluded from the primary gate and run separately, so the gate stays fast and deterministic.
+- **Out of gate by design:** the PySide6 UI, the NTP/network paths, the FastAPI/Home-Assistant server, the bespoke installer and the build scripts.
+- **Style and linting:** the whole codebase is `black`- (line length 88) and `flake8`-clean (`.flake8`); the test run is warning-free (deprecated platform/library calls were replaced, not suppressed).
 
 ## Table of Contents
 

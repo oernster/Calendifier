@@ -11,9 +11,38 @@ License: MIT
 
 import sys
 import os
+import io
 import logging
 from pathlib import Path
 from typing import Optional
+
+
+def _make_windowed_streams_safe() -> None:
+    """Make stdout/stderr safe for windowed (no-console) frozen builds.
+
+    A PyInstaller ``--windowed`` build has ``sys.stdout``/``sys.stderr`` set to
+    ``None``, so the first log or print at startup raises and the app dies
+    silently. Wrap them in a UTF-8 stream (or /dev/null) BEFORE anything writes.
+    """
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    os.environ.setdefault("PYTHONUTF8", "1")
+    if not getattr(sys, "frozen", False):
+        return
+    for name in ("stdout", "stderr"):
+        stream = getattr(sys, name, None)
+        try:
+            if stream is None or not hasattr(stream, "buffer"):
+                raise AttributeError
+            setattr(
+                sys,
+                name,
+                io.TextIOWrapper(stream.buffer, encoding="utf-8", errors="ignore"),
+            )
+        except (AttributeError, ValueError, OSError):
+            setattr(sys, name, open(os.devnull, "w", encoding="utf-8"))
+
+
+_make_windowed_streams_safe()
 
 # Suppress Qt font warnings BEFORE importing Qt
 os.environ["QT_LOGGING_RULES"] = (
@@ -24,23 +53,24 @@ os.environ["QT_LOGGING_RULES"] = (
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from PySide6.QtWidgets import QApplication, QMessageBox
-from PySide6.QtCore import QTimer, QThread, Signal, QObject
-from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication, QMessageBox  # noqa: E402
+from PySide6.QtCore import QTimer, QThread, Signal, QObject  # noqa: E402
+from PySide6.QtGui import QIcon  # noqa: E402
 
 # Import application components
-from version import __version__, get_version_string, get_about_text, UI_EMOJIS
-from calendar_app.data.database import DatabaseManager
-from calendar_app.core.event_manager import EventManager
-from calendar_app.core.calendar_manager import CalendarManager
-from calendar_app.core.multi_country_holiday_provider import MultiCountryHolidayProvider
-from calendar_app.utils.ntp_client import NTPClient
-from calendar_app.config.settings import SettingsManager
-from calendar_app.config.themes import ThemeManager
-from calendar_app.ui.main_window import MainWindow
-from calendar_app.localization import (
+from version import __version__, UI_EMOJIS  # noqa: E402
+from calendar_app.data.database import DatabaseManager  # noqa: E402
+from calendar_app.core.event_manager import EventManager  # noqa: E402
+from calendar_app.core.calendar_manager import CalendarManager  # noqa: E402
+from calendar_app.core.multi_country_holiday_provider import (  # noqa: E402
+    MultiCountryHolidayProvider,
+)
+from calendar_app.utils.ntp_client import NTPClient  # noqa: E402
+from calendar_app.config.settings import SettingsManager  # noqa: E402
+from calendar_app.config.themes import ThemeManager  # noqa: E402
+from calendar_app.ui.main_window import MainWindow  # noqa: E402
+from calendar_app.localization import (  # noqa: E402
     I18nManager,
-    get_text as _,
     set_locale,
     LocaleDetector,
 )
@@ -70,15 +100,15 @@ def _initialize_startup_locale():
         manager = get_i18n_manager()
         manager.reload_translations()
 
-        print(f"🌍 Early locale initialization: {saved_locale}")
+        logging.debug(f"🌍 Early locale initialization: {saved_locale}")
         translation_obj = manager.translations.get(saved_locale)
         if translation_obj:
-            print(f"🌍 Loaded translations for {saved_locale}")
+            logging.debug(f"🌍 Loaded translations for {saved_locale}")
         else:
-            print(f"🌍 No translations found for {saved_locale}")
+            logging.debug(f"🌍 No translations found for {saved_locale}")
 
     except Exception as e:
-        print(f"⚠️ Early locale initialization failed: {e}")
+        logging.warning(f"⚠️ Early locale initialization failed: {e}")
         set_locale("en_GB")  # Use en_GB as fallback to match our default settings
 
 
@@ -167,13 +197,9 @@ class ApplicationInitializer(QObject):
             self.progress_update.emit(
                 f"{UI_EMOJIS['holiday']} Loading holiday provider..."
             )
-            # Get holiday country from settings (or derive from locale)
-            holiday_country = self.settings_manager.get_holiday_country()
-            if holiday_country == "GB":  # If still default, try to get from locale
-                locale_country = LocaleDetector.get_country_from_locale(saved_locale)
-                if locale_country != "GB":
-                    holiday_country = locale_country
-                    self.settings_manager.set_holiday_country(holiday_country)
+            # Resolve the holiday region (an explicit country, or "auto" which
+            # derives it from the selected timezone, then locale, then GB).
+            holiday_country = self.settings_manager.get_effective_holiday_country()
             self.holiday_provider = MultiCountryHolidayProvider(holiday_country)
 
             self.progress_update.emit(
@@ -219,6 +245,7 @@ class CalendarApplication(QApplication):
 
         # Application components
         self.main_window: Optional[MainWindow] = None
+        self.splash = None
         self.initializer: Optional[ApplicationInitializer] = None
         self.init_thread: Optional[QThread] = None
 
@@ -232,8 +259,29 @@ class CalendarApplication(QApplication):
         self.ntp_client: Optional[NTPClient] = None
         self.i18n_manager: Optional[I18nManager] = None
 
-        # Setup application
+        # Show the splash FIRST, before the icon/taskbar/style setup. The first
+        # top-level window a process shows pays a one-time window-system
+        # initialisation cost, so showing the splash first makes it appear as
+        # early as possible and absorbs that cost while the rest initialises.
+        self._show_splash()
+
+        # Setup application (icon, taskbar, style) while the splash is visible.
         self._setup_application()
+
+    def _show_splash(self):
+        """🪟 Create and show the startup splash screen."""
+        try:
+            from calendar_app.ui.splash import make_splash
+
+            self.splash = make_splash()
+            self.splash.show()
+            # Force an immediate paint so the splash is visible right away
+            # rather than only after the next event-loop iteration.
+            self.splash.repaint()
+            self.processEvents()
+        except Exception as e:
+            logging.warning(f"Could not show splash screen: {e}")
+            self.splash = None
 
     def _setup_logging(self):
         """Configure application logging."""
@@ -250,26 +298,35 @@ class CalendarApplication(QApplication):
             "%(asctime)s - %(levelname)s - %(message)s"
         )
 
+        # The log file captures full INFO detail; the console stays quiet
+        # (WARNING and above) so day-to-day runs are not flooded. Raise console
+        # verbosity with CALENDIFIER_LOG_LEVEL=INFO (or DEBUG) when diagnosing.
+        console_level_name = os.environ.get("CALENDIFIER_LOG_LEVEL", "WARNING").upper()
+        console_level = getattr(logging, console_level_name, logging.WARNING)
+
         # Create file handler with UTF-8 encoding
         file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setFormatter(file_formatter)
+        file_handler.setLevel(logging.INFO)
 
         # Create console handler with UTF-8 encoding and error handling
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(console_formatter)
+        console_handler.setLevel(console_level)
 
         # Configure root logger
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.INFO)
         root_logger.addHandler(file_handler)
 
-        # Only add console handler if we can handle Unicode
+        # Only add console handler if the console encoding can represent the
+        # emoji used in log messages. Probe by encoding, not by writing to
+        # stdout (writing here would print a stray character before any logs).
+        encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
         try:
-            # Test if console can handle Unicode
-            sys.stdout.write("📅")
-            sys.stdout.flush()
+            "📅".encode(encoding)
             root_logger.addHandler(console_handler)
-        except UnicodeEncodeError:
+        except (UnicodeEncodeError, LookupError):
             # Console can't handle Unicode, create a safe console handler
             import io
 
@@ -277,6 +334,7 @@ class CalendarApplication(QApplication):
                 io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
             )
             safe_console_handler.setFormatter(console_formatter)
+            safe_console_handler.setLevel(console_level)
             root_logger.addHandler(safe_console_handler)
 
         logger = logging.getLogger(__name__)
@@ -306,7 +364,6 @@ class CalendarApplication(QApplication):
             if platform.system() == "Windows":
                 # Set Application User Model ID to separate from Python
                 import ctypes
-                from ctypes import wintypes
 
                 # Define the AppUserModelID
                 app_id = f"CalendarApp.Desktop.Calendar.{__version__}"
@@ -326,7 +383,7 @@ class CalendarApplication(QApplication):
     def _set_application_icon(self):
         """📅 Set application icon for taskbar."""
         try:
-            from PySide6.QtGui import QPixmap, QPainter, QIcon, QFont
+            from PySide6.QtGui import QPixmap, QPainter, QFont
             from PySide6.QtCore import Qt
 
             # Try to use the .ico file first (best for Windows taskbar)
@@ -377,7 +434,7 @@ class CalendarApplication(QApplication):
             logging.warning(f"⚠️ Failed to set application icon: {e}")
             # Fallback: try to set a simple icon
             try:
-                from PySide6.QtGui import QPixmap, QIcon
+                from PySide6.QtGui import QPixmap
                 from PySide6.QtCore import Qt
 
                 # Create a simple colored square as fallback
@@ -385,7 +442,7 @@ class CalendarApplication(QApplication):
                 pixmap.fill(Qt.GlobalColor.blue)
                 icon = QIcon(pixmap)
                 self.setWindowIcon(icon)
-            except:
+            except Exception:
                 pass
 
     def initialize_async(self):
@@ -412,7 +469,11 @@ class CalendarApplication(QApplication):
     def _on_progress_update(self, message: str):
         """Handle initialization progress updates."""
         logging.info(message)
-        # Could show splash screen with progress here
+        if self.splash is not None:
+            from calendar_app.ui.splash import splash_message
+
+            splash_message(self.splash, message)
+            self.processEvents()
 
     def _on_initialization_complete(self, success: bool, message: str):
         """Handle initialization completion."""
@@ -463,12 +524,16 @@ class CalendarApplication(QApplication):
 
             # Apply initial theme
             if self.theme_manager:
-                theme = self.theme_manager.current_theme
                 qss = self.theme_manager.generate_qss_stylesheet()
                 self.setStyleSheet(qss)
 
             # Show main window
             self.main_window.show()
+
+            # Close the splash now that the window is up.
+            if self.splash is not None:
+                self.splash.finish(self.main_window)
+                self.splash = None
 
             # Start periodic updates
             self._start_periodic_updates()
@@ -489,7 +554,7 @@ class CalendarApplication(QApplication):
         try:
             clock_widget = self.main_window.get_clock_widget()
             calendar_widget = self.main_window.get_calendar_widget()
-            event_panel = self.main_window.get_event_panel()
+            self.main_window.get_event_panel()
         except Exception as e:
             logging.error(f"Failed to get component references: {e}")
             return
@@ -500,7 +565,8 @@ class CalendarApplication(QApplication):
                 if hasattr(self.main_window, "set_calendar_manager"):
                     self.main_window.set_calendar_manager(self.calendar_manager)
                     logging.debug(
-                        "✅ Injected calendar manager and applied all settings via main window"
+                        "✅ Injected calendar manager and applied all "
+                        "settings via main window"
                     )
         except Exception as e:
             logging.warning(f"⚠️ Failed to inject calendar manager: {e}")
@@ -524,19 +590,22 @@ class CalendarApplication(QApplication):
                     logging.debug("✅ Injected holiday provider into main window")
 
                 # CRITICAL FIX: Force locale refresh after app is fully initialized
-                # This ensures holidays are displayed in the correct language from startup
+                # This ensures holidays are displayed in the correct language
+                # from startup
                 self.holiday_provider.force_locale_refresh()
                 logging.debug(
                     "✅ Forced holiday provider locale refresh after app initialization"
                 )
 
                 # NUITKA FIX: Treat compiled executable launch like a locale switch
-                # This ensures holidays library data is properly loaded in compiled environment
+                # This ensures holidays library data is properly loaded in
+                # compiled environment
                 import sys
 
                 if getattr(sys, "frozen", False):
                     logging.debug(
-                        "🔥 Detected Nuitka compiled environment - performing additional holiday refresh"
+                        "🔥 Detected Nuitka compiled environment - "
+                        "performing additional holiday refresh"
                     )
                     # Add a small delay to ensure all systems are ready
                     QTimer.singleShot(500, lambda: self._nuitka_holiday_refresh())
@@ -617,7 +686,8 @@ class CalendarApplication(QApplication):
 
                 if result.success:
                     logging.debug(
-                        f"✅ NTP sync successful: {result.server} (offset: {result.offset:.3f}s)"
+                        f"✅ NTP sync successful: {result.server} "
+                        f"(offset: {result.offset:.3f}s)"
                     )
                 else:
                     logging.warning(f"⚠️ NTP sync failed: {result.error}")
@@ -697,7 +767,7 @@ def main():
                 app.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
                 app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
             # Qt6 has these enabled by default, no need to set them
-        except:
+        except Exception:
             # If we can't determine Qt version, skip setting these attributes
             pass
 

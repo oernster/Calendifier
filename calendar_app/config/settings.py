@@ -7,7 +7,7 @@ This module handles application settings persistence and management.
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 from version import __version__
 from calendar_app.data.models import AppSettings
 from calendar_app.localization import LocaleDetector
@@ -64,7 +64,7 @@ class SettingsManager:
         """📋 Get setting value by key."""
         try:
             return getattr(self._settings, key, default)
-        except AttributeError:
+        except AttributeError:  # pragma: no cover - getattr(default) never raises
             logger.warning(f"⚠️ Unknown setting key: {key}")
             return default
 
@@ -79,7 +79,7 @@ class SettingsManager:
             else:
                 logger.warning(f"⚠️ Unknown setting key: {key}")
                 return False
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - defensive guard
             logger.error(f"❌ Failed to set setting {key}: {e}")
             return False
 
@@ -100,7 +100,7 @@ class SettingsManager:
             logger.info(f"🔄 Updated {len(settings_dict)} settings")
             return True
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - defensive guard
             logger.error(f"❌ Failed to update settings: {e}")
             return False
 
@@ -111,7 +111,7 @@ class SettingsManager:
             self._save_settings()
             logger.debug("🔄 Reset settings to defaults")
             return True
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - defensive guard
             logger.error(f"❌ Failed to reset settings: {e}")
             return False
 
@@ -271,8 +271,55 @@ class SettingsManager:
             return False
 
     def get_holiday_country(self) -> str:
-        """🌍 Get holiday country code."""
+        """🌍 Get the raw holiday country setting ('auto' or a country code)."""
         return self._settings.holiday_country
+
+    def _resolve_effective_timezone_id(self):
+        """🌍 Resolve the live effective timezone id (system/settings dependent).
+
+        Isolated so it can be bypassed in tests by passing ``timezone_id``.
+        """
+        try:  # pragma: no cover - touches system timezone / default settings
+            from calendar_app.utils.ntp_client import get_effective_timezone
+
+            return get_effective_timezone().key
+        except Exception as e:  # pragma: no cover - defensive
+            logger.debug(f"🌍 Could not resolve effective timezone: {e}")
+            return None
+
+    def get_effective_holiday_country(self, timezone_id=None) -> str:
+        """🌍 Resolve the holiday country actually used to load holidays.
+
+        When the setting is "auto" the region is inferred from the effective
+        timezone; if that timezone is not mappable, fall back to the country
+        implied by the locale, then to GB. An explicit country always wins.
+
+        Args:
+            timezone_id: Override the timezone used for "auto" resolution. When
+                None (production default) the live effective timezone is used.
+        """
+        from calendar_app.core.multi_country_holiday_provider import (
+            MultiCountryHolidayProvider,
+        )
+
+        raw = self._settings.holiday_country
+        if raw and raw != MultiCountryHolidayProvider.AUTO_COUNTRY:
+            return raw
+
+        # Auto: derive from the effective (resolved) timezone.
+        if timezone_id is None:
+            timezone_id = self._resolve_effective_timezone_id()
+
+        country = MultiCountryHolidayProvider.get_country_from_timezone(timezone_id)
+        if country:
+            return country
+
+        # Fall back to the locale's country, then GB.
+        supported = MultiCountryHolidayProvider.get_supported_countries()
+        locale_country = LocaleDetector.get_country_from_locale(self.get_locale())
+        if locale_country in supported:
+            return locale_country
+        return "GB"
 
     def get_locale(self) -> str:
         """🌍 Get current locale."""
@@ -293,7 +340,7 @@ class SettingsManager:
         return getattr(self._settings, "timezone", "auto")
 
     def set_timezone(self, timezone: str) -> bool:
-        """🌍 Set timezone ('auto' for system timezone or specific timezone like 'Europe/London')."""
+        """🌍 Set timezone ('auto' or an IANA zone such as 'Europe/London')."""
         # Basic validation - check if it's 'auto' or a valid timezone
         if timezone == "auto":
             return self.set_setting("timezone", timezone)
@@ -316,6 +363,12 @@ class SettingsManager:
         )
 
         supported_countries = MultiCountryHolidayProvider.get_supported_countries()
+
+        # Allow the "auto" sentinel (derive region from timezone) unchanged.
+        if country_code == MultiCountryHolidayProvider.AUTO_COUNTRY:
+            return self.set_setting(
+                "holiday_country", MultiCountryHolidayProvider.AUTO_COUNTRY
+            )
 
         country_code = country_code.upper()
         if country_code in supported_countries:
@@ -429,14 +482,18 @@ class SettingsManager:
             )
 
             supported_countries = MultiCountryHolidayProvider.get_supported_countries()
-            if self._settings.holiday_country not in supported_countries:
+            if (
+                self._settings.holiday_country
+                != MultiCountryHolidayProvider.AUTO_COUNTRY
+                and self._settings.holiday_country not in supported_countries
+            ):
                 issues["holiday_country"] = (
                     f"Invalid holiday country: {self._settings.holiday_country}"
                 )
-        except Exception:
+        except Exception:  # pragma: no cover - defensive guard
             # If we can't validate, just log a warning but don't fail
             logger.warning(
-                f"⚠️ Could not validate holiday country: {self._settings.holiday_country}"
+                f"⚠️ Could not validate holiday country: {self._settings.holiday_country}"  # noqa: E501
             )
 
         if issues:
@@ -459,14 +516,25 @@ class SettingsManager:
                 self._settings.holiday_country, {"flag": "🏳️", "name": "Unknown"}
             )
             country_display = f"{country_info['flag']} {country_info['name']}"
-        except:
+        except Exception:  # pragma: no cover - defensive guard
             country_display = self._settings.holiday_country
+
+        weekday_names = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ]
+        first_day_name = weekday_names[self._settings.first_day_of_week]
 
         return f"""📊 Settings Summary:
 🎨 Theme: {self._settings.theme}
 🌐 NTP Sync: Every {self._settings.ntp_interval_minutes} minutes
 🖥️ Window: {self._settings.window_width}×{self._settings.window_height}
-📅 First Day: {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][self._settings.first_day_of_week]}
+📅 First Day: {first_day_name}
 ⏰ Default Event: {self._settings.default_event_duration} minutes
 📊 Week Numbers: {'Yes' if self._settings.show_week_numbers else 'No'}
 🌍 Holiday Country: {country_display}

@@ -6,10 +6,10 @@ Advanced recurring event pattern builder with RFC 5545 RRULE support
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import date, datetime, timedelta
-from typing import Optional, List, Dict, Any, Callable
+from typing import Optional
 import logging
 
-from ..core.rrule_parser import RRuleParser, Frequency, Weekday
+from ..core.rrule_parser import RRuleParser
 from ..core.recurring_event_generator import RecurringEventGenerator
 from ..localization.i18n_manager import I18nManager
 

@@ -1,0 +1,14 @@
+[flake8]
+max-line-length = 88
+# Black compatibility: E203 (slice whitespace) and W503 (break before binary
+# operator) conflict with Black's formatting; E704 is Black's def-on-one-line.
+extend-ignore = E203, W503, E704
+exclude =
+    .git,
+    __pycache__,
+    venv,
+    build,
+    dist,
+    dist-pyinstaller,
+    dist-installer,
+    dist-installer.build

@@ -4,26 +4,20 @@ Calendifier API Server with NTP Support
 Provides REST API for calendar events, notes, holidays, and system management
 """
 
-import asyncio
 import json
 import sqlite3
-import subprocess
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import ntplib
-import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 # Import holidays library directly
 try:
-    import holidays
+    import holidays  # noqa: F401  (imported to test availability)
 
     HOLIDAYS_LIBRARY_AVAILABLE = True
     print("✅ Successfully imported holidays library")
@@ -157,34 +151,45 @@ class Settings(BaseModel):
     debug_mode: bool = Field(False, description="Enable debug mode")
 
 
+# API description rendered in the OpenAPI/Swagger docs. Built from adjacent
+# string literals so each source line stays within the line-length limit while
+# the concatenated value remains byte-for-byte identical to the original.
+API_DESCRIPTION = (
+    "\n"
+    "## Calendifier API Server\n"
+    "\n"
+    "A comprehensive calendar and event management API with multi-language "
+    "support, holidays, and NTP synchronization.\n"
+    "\n"
+    "### Features\n"
+    "- 📋 **Event Management**: Create, read, update, delete events with "
+    "recurring support (RRULE)\n"
+    "- 📝 **Notes**: Organize notes with categories and tags\n"
+    "- 🎉 **Holidays**: Support for 28+ countries with localized names\n"
+    "- 🌍 **Internationalization**: 28+ languages with full translation support\n"
+    "- 🕐 **NTP Synchronization**: Accurate time synchronization\n"
+    "- 📤📥 **Import/Export**: JSON-based data exchange\n"
+    "- ⚙️ **Settings**: Comprehensive configuration management\n"
+    "\n"
+    "### Authentication\n"
+    "This API is designed for Home Assistant integration and uses CORS for "
+    "cross-origin requests.\n"
+    "\n"
+    "### Rate Limiting\n"
+    "No rate limiting is currently implemented. Use responsibly.\n"
+    "\n"
+    "### Error Handling\n"
+    "All endpoints return standard HTTP status codes with JSON error messages.\n"
+    "            "
+)
+
+
 class CalendifierAPI:
     def __init__(self, db_path: str = "calendifier.db"):
         self.db_path = db_path
         self.app = FastAPI(
             title="📅 Calendifier API",
-            description="""
-## Calendifier API Server
-
-A comprehensive calendar and event management API with multi-language support, holidays, and NTP synchronization.
-
-### Features
-- 📋 **Event Management**: Create, read, update, delete events with recurring support (RRULE)
-- 📝 **Notes**: Organize notes with categories and tags
-- 🎉 **Holidays**: Support for 28+ countries with localized names
-- 🌍 **Internationalization**: 28+ languages with full translation support
-- 🕐 **NTP Synchronization**: Accurate time synchronization
-- 📤📥 **Import/Export**: JSON-based data exchange
-- ⚙️ **Settings**: Comprehensive configuration management
-
-### Authentication
-This API is designed for Home Assistant integration and uses CORS for cross-origin requests.
-
-### Rate Limiting
-No rate limiting is currently implemented. Use responsibly.
-
-### Error Handling
-All endpoints return standard HTTP status codes with JSON error messages.
-            """,
+            description=API_DESCRIPTION,
             version=__version__,
             contact={
                 "name": "Oliver Ernster",
@@ -197,15 +202,18 @@ All endpoints return standard HTTP status codes with JSON error messages.
             tags_metadata=[
                 {
                     "name": "events",
-                    "description": "Event management operations including recurring events with RRULE support",
+                    "description": "Event management operations including "
+                    "recurring events with RRULE support",
                 },
                 {
                     "name": "notes",
-                    "description": "Note management operations with categorization and tagging",
+                    "description": "Note management operations with "
+                    "categorization and tagging",
                 },
                 {
                     "name": "holidays",
-                    "description": "Holiday information for 28+ countries with localized names",
+                    "description": "Holiday information for 28+ countries with "
+                    "localized names",
                 },
                 {
                     "name": "settings",
@@ -277,8 +285,7 @@ All endpoints return standard HTTP status codes with JSON error messages.
         cursor = conn.cursor()
 
         # Events table
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
@@ -292,8 +299,7 @@ All endpoints return standard HTTP status codes with JSON error messages.
                 rrule TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         # Add rrule column to existing events table if it doesn't exist
         try:
@@ -304,8 +310,7 @@ All endpoints return standard HTTP status codes with JSON error messages.
             pass
 
         # Notes table
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS notes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
@@ -315,19 +320,16 @@ All endpoints return standard HTTP status codes with JSON error messages.
                 tags TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         # Settings table
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         # Insert default settings
         default_settings = Settings()
@@ -350,7 +352,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
         range_start: datetime.date,
         range_end: datetime.date,
     ) -> List[datetime.date]:
-        """Expand an RRULE pattern into individual occurrence dates within the given range"""
+        """Expand an RRULE pattern into individual occurrence dates within \
+the given range"""
         try:
             # Parse RRULE components
             parts = rrule.split(";")
@@ -571,7 +574,9 @@ All endpoints return standard HTTP status codes with JSON error messages.
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO events (title, start_date, start_time, end_date, end_time, description, category, is_all_day, rrule) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO events (title, start_date, start_time, end_date, "
+                "end_time, description, category, is_all_day, rrule) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     event.title,
                     event.start_date,
@@ -612,7 +617,9 @@ All endpoints return standard HTTP status codes with JSON error messages.
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE events SET title = ?, start_date = ?, start_time = ?, end_date = ?, end_time = ?, description = ?, category = ?, is_all_day = ?, rrule = ? WHERE id = ?",
+                "UPDATE events SET title = ?, start_date = ?, start_time = ?, "
+                "end_date = ?, end_time = ?, description = ?, category = ?, "
+                "is_all_day = ?, rrule = ? WHERE id = ?",
                 (
                     event.title,
                     event.start_date,
@@ -666,18 +673,22 @@ All endpoints return standard HTTP status codes with JSON error messages.
             "/api/v1/events/expanded",
             tags=["events"],
             summary="Get Expanded Events",
-            description="Get events with recurring events expanded into individual occurrences",
+            description="Get events with recurring events expanded into "
+            "individual occurrences",
         )
         async def get_expanded_events(start_date: str = None, end_date: str = None):
             """
             Get events with recurring events expanded into individual occurrences.
 
-            This endpoint takes recurring events (those with RRULE patterns) and expands them
-            into individual occurrences within the specified date range.
+            This endpoint takes recurring events (those with RRULE patterns)
+            and expands them into individual occurrences within the specified
+            date range.
 
             Parameters:
-            - **start_date**: Start date for expansion (YYYY-MM-DD). Defaults to current month start.
-            - **end_date**: End date for expansion (YYYY-MM-DD). Defaults to current month end.
+            - **start_date**: Start date for expansion (YYYY-MM-DD). Defaults
+              to current month start.
+            - **end_date**: End date for expansion (YYYY-MM-DD). Defaults to
+              current month end.
 
             Returns:
             - List of expanded events (recurring events become multiple entries)
@@ -685,7 +696,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
             - Total count of expanded events
 
             Example:
-            A weekly recurring event will appear as separate entries for each week in the range.
+            A weekly recurring event will appear as separate entries for each
+            week in the range.
             """
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -822,7 +834,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO notes (title, content, category, date, tags) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO notes (title, content, category, date, tags) "
+                "VALUES (?, ?, ?, ?, ?)",
                 (note.title, note.content, note.category, note.date, note.tags),
             )
             note_id = cursor.lastrowid
@@ -924,7 +937,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
             # Update all settings
             for key, value in settings.items():
                 cursor.execute(
-                    "INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)",
+                    "INSERT OR REPLACE INTO settings (key, value, updated_at) "
+                    "VALUES (?, ?, ?)",
                     (key, json.dumps(value), datetime.now().isoformat()),
                 )
             conn.commit()
@@ -962,7 +976,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
             "/api/v1/holidays/auto/{year}",
             tags=["holidays"],
             summary="Get Auto-Detected Holidays for Year",
-            description="Get all holidays for a year using locale-based country detection",
+            description="Get all holidays for a year using locale-based "
+            "country detection",
         )
         async def get_holidays_auto_year(year: int):
             """
@@ -1035,7 +1050,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
             if current_locale not in locale_to_country:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Unsupported locale: {current_locale}. Supported locales: {list(locale_to_country.keys())}",
+                    detail=f"Unsupported locale: {current_locale}. "
+                    f"Supported locales: {list(locale_to_country.keys())}",
                 )
 
             country = locale_to_country[current_locale]
@@ -1064,7 +1080,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
                 holiday["days_until"] = (holiday_date - today).days
 
             print(
-                f"✅ Returning {len(all_holidays)} holidays for {country} ({current_locale})"
+                f"✅ Returning {len(all_holidays)} holidays "
+                f"for {country} ({current_locale})"
             )
             return {
                 "holidays": all_holidays,
@@ -1078,7 +1095,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
             "/api/v1/holidays/auto/{year}/{month}",
             tags=["holidays"],
             summary="Get Auto-Detected Holidays for Month",
-            description="Get holidays for a specific month using locale-based country detection",
+            description="Get holidays for a specific month using locale-based "
+            "country detection",
         )
         async def get_holidays_auto_month(year: int, month: int):
             """
@@ -1216,7 +1234,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
 
             actual_country = locale_to_country.get(current_locale, country)
             print(
-                f"🔄 OVERRIDE: Requested {country} but using {actual_country} based on locale {current_locale}"
+                f"🔄 OVERRIDE: Requested {country} but using {actual_country} "
+                f"based on locale {current_locale}"
             )
 
             all_holidays = []
@@ -1633,7 +1652,10 @@ All endpoints return standard HTTP status codes with JSON error messages.
 
                         # Insert new event
                         cursor.execute(
-                            "INSERT INTO events (title, start_date, start_time, end_date, end_time, description, category, is_all_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                            "INSERT INTO events (title, start_date, "
+                            "start_time, end_date, end_time, description, "
+                            "category, is_all_day) VALUES (?, ?, ?, ?, ?, ?, "
+                            "?, ?)",
                             (
                                 event.get("title"),
                                 event.get("start_date"),
@@ -1704,7 +1726,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
 
                         # Insert new note
                         cursor.execute(
-                            "INSERT INTO notes (title, content, category, date, tags) VALUES (?, ?, ?, ?, ?)",
+                            "INSERT INTO notes (title, content, category, "
+                            "date, tags) VALUES (?, ?, ?, ?, ?)",
                             (
                                 note.get("title"),
                                 note.get("content"),
@@ -1806,7 +1829,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
         )
         async def get_about():
             """
-            Get application information including version, features, and technical details.
+            Get application information including version, features, and
+            technical details.
 
             Returns:
             - Application name and version
@@ -1817,7 +1841,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
             return {
                 "app_name": "📅 Calendifier",
                 "version": __version__,
-                "description": "Cross-platform desktop calendar with analog clock, event handling, note taking, and holidays",
+                "description": "Cross-platform desktop calendar with analog "
+                "clock, event handling, note taking, and holidays",
                 "features": [
                     "🕐 Analog Clock Display",
                     "📅 Interactive Calendar View",
@@ -1898,7 +1923,8 @@ All endpoints return standard HTTP status codes with JSON error messages.
     async def get_holidays_for_period(
         self, country: str, year: int, month: int, add_days_until: bool = True
     ):
-        """Get holidays for a specific period using the sophisticated holiday provider"""
+        """Get holidays for a specific period using the sophisticated \
+holiday provider"""
         try:
             if not self.use_sophisticated_provider or not self.holiday_provider:
                 raise Exception("Sophisticated holiday provider not available")

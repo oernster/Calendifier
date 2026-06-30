@@ -6,11 +6,15 @@ corresponding to our supported languages. It includes country support with
 flags, names, and holiday codes for the most important international markets.
 """
 
+# Long log/dict-literal strings here cannot wrap without changing content.
+# flake8: noqa: E501
+
 import logging
-from datetime import date, datetime
-from typing import Dict, List, Optional, Set, Any, TYPE_CHECKING
+from datetime import date
+from typing import Dict, List, Optional, TYPE_CHECKING
 import holidays
 from calendar_app.core.holiday_translations import get_translated_holiday_name
+from calendar_app.core.observance_data import observance_dates
 
 if TYPE_CHECKING:
     from calendar_app.data.models import Holiday
@@ -20,6 +24,9 @@ logger = logging.getLogger(__name__)
 
 class MultiCountryHolidayProvider:
     """🌍 Provides holiday data for multiple countries with caching."""
+
+    # Sentinel meaning "derive the holiday region from the selected timezone".
+    AUTO_COUNTRY = "auto"
 
     # NOTE: Holiday filtering is now handled by culturally-specific JSON files
     # Each locale contains only holidays appropriate for that culture
@@ -75,6 +82,66 @@ class MultiCountryHolidayProvider:
         "GB": {"name": "United Kingdom", "flag": "🇬🇧", "code": "UK"},  # Legacy default
     }
 
+    # Maps an IANA timezone id to one of the SUPPORTED_COUNTRIES keys above, so
+    # the holiday region can be inferred from the user's selected timezone.
+    # Only zones whose country we actually support are listed; anything else
+    # resolves to None and the caller falls back (locale, then GB).
+    TIMEZONE_TO_COUNTRY = {
+        # Europe
+        "Europe/London": "GB",
+        "Europe/Paris": "FR",
+        "Europe/Berlin": "DE",
+        "Europe/Rome": "IT",
+        "Europe/Madrid": "ES",
+        "Europe/Barcelona": "ES",
+        "Europe/Moscow": "RU",
+        "Europe/Prague": "CZ",
+        "Europe/Stockholm": "SE",
+        "Europe/Oslo": "NO",
+        "Europe/Copenhagen": "DK",
+        "Europe/Helsinki": "FI",
+        "Europe/Amsterdam": "NL",
+        "Europe/Warsaw": "PL",
+        "Europe/Lisbon": "PT",
+        "Europe/Istanbul": "TR",
+        "Europe/Kyiv": "UA",
+        "Europe/Kiev": "UA",
+        "Europe/Athens": "GR",
+        "Europe/Bucharest": "RO",
+        "Europe/Budapest": "HU",
+        "Europe/Zagreb": "HR",
+        "Europe/Sofia": "BG",
+        "Europe/Bratislava": "SK",
+        "Europe/Ljubljana": "SI",
+        "Europe/Tallinn": "EE",
+        "Europe/Riga": "LV",
+        "Europe/Vilnius": "LT",
+        # Americas (all US zones share the US federal holiday set)
+        "America/New_York": "US",
+        "America/Detroit": "US",
+        "America/Chicago": "US",
+        "America/Denver": "US",
+        "America/Phoenix": "US",
+        "America/Los_Angeles": "US",
+        "America/Anchorage": "US",
+        "America/Toronto": "CA",
+        "America/Montreal": "CA",
+        "America/Vancouver": "CA",
+        "America/Sao_Paulo": "BR",
+        # Asia / Middle East
+        "Asia/Tokyo": "JP",
+        "Asia/Shanghai": "CN",
+        "Asia/Taipei": "TW",
+        "Asia/Seoul": "KR",
+        "Asia/Kolkata": "IN",
+        "Asia/Calcutta": "IN",
+        "Asia/Riyadh": "SA",
+        "Asia/Jakarta": "ID",
+        "Asia/Ho_Chi_Minh": "VN",
+        "Asia/Bangkok": "TH",
+        "Asia/Jerusalem": "IL",
+    }
+
     # Fallback holiday data for countries not supported by holidays library
     # Note: These will be filtered based on EXCLUDED_HOLIDAYS for each country
     FALLBACK_HOLIDAYS = {"New Year's Day": "01-01", "Christmas Day": "12-25"}
@@ -108,6 +175,7 @@ class MultiCountryHolidayProvider:
         self.country_code = country_code.upper()
         self._holiday_cache: Dict[str, holidays.HolidayBase] = {}
         self._fallback_cache: Dict[str, Dict[date, str]] = {}
+        self._observance_cache: Dict[str, Dict[date, str]] = {}
 
         # Validate country code
         if self.country_code not in self.SUPPORTED_COUNTRIES:
@@ -123,23 +191,21 @@ class MultiCountryHolidayProvider:
     def _get_current_locale(self) -> str:
         """Get the current application locale for holiday translations."""
         try:
-            # CRITICAL FIX: Try multiple sources to get the current locale
+            # Try multiple sources to get the current locale.
             current_locale = None
 
-            # First, try to get from I18n manager
+            # First, try to get from the I18n manager.
             try:
                 from calendar_app.localization.i18n_manager import get_i18n_manager
 
                 i18n_manager = get_i18n_manager()
                 current_locale = i18n_manager.current_locale
-                logger.debug(
-                    f"🌍 Holiday provider using locale from I18n manager: {current_locale}"
-                )
-            except Exception as i18n_error:
+                logger.debug(f"🌍 Locale from I18n manager: {current_locale}")
+            except Exception as i18n_error:  # pragma: no cover - i18n is available
                 logger.debug(f"🌍 I18n manager not available: {i18n_error}")
 
-            # If I18n manager failed, try to get from settings manager
-            if not current_locale:
+            # If the I18n manager failed, try the settings manager.
+            if not current_locale:  # pragma: no cover - i18n provides the locale
                 try:
                     from calendar_app.config.settings import SettingsManager
                     from pathlib import Path
@@ -150,41 +216,33 @@ class MultiCountryHolidayProvider:
                     settings_locale = settings_manager.get_locale()
                     if settings_locale:
                         current_locale = settings_locale
-                        logger.debug(
-                            f"🌍 Holiday provider using locale from settings: {current_locale}"
-                        )
+                        logger.debug(f"🌍 Locale from settings: {current_locale}")
                 except Exception as settings_error:
                     logger.debug(f"🌍 Settings manager not available: {settings_error}")
 
-            # If still no locale, try system locale detection
-            if not current_locale:
+            # If still no locale, try system locale detection.
+            if not current_locale:  # pragma: no cover - i18n provides the locale
                 try:
-                    from calendar_app.localization.locale_detector import LocaleDetector
+                    from calendar_app.localization.locale_detector import (
+                        LocaleDetector,
+                    )
 
                     detector = LocaleDetector()
                     detected_locale = detector.detect_system_locale()
                     if detected_locale:
                         current_locale = detected_locale
-                        logger.debug(
-                            f"🌍 Holiday provider using detected system locale: {current_locale}"
-                        )
+                        logger.debug(f"🌍 Detected system locale: {current_locale}")
                 except Exception as detect_error:
                     logger.debug(f"🌍 System locale detection failed: {detect_error}")
 
-            # Final fallback - use GB instead of US to match our default settings
-            if not current_locale:
+            # Final fallback - GB to match our default settings.
+            if not current_locale:  # pragma: no cover - i18n provides the locale
                 current_locale = "en_GB"
-                logger.debug(f"🌍 Holiday provider falling back to en_GB locale")
-
-            # Note: Removed automatic country updating to prevent overriding explicit country settings
-            # The country should be set explicitly via set_country() method
+                logger.debug("🌍 Falling back to en_GB locale")
 
             return current_locale
-        except Exception as e:
-            # Ultimate fallback to English if everything fails - use GB to match our default settings
-            logger.debug(
-                f"🌍 Holiday provider falling back to en_GB locale due to error: {e}"
-            )
+        except Exception as e:  # pragma: no cover - defensive ultimate fallback
+            logger.debug(f"🌍 Falling back to en_GB locale due to error: {e}")
             return "en_GB"
 
     def _auto_update_country_from_locale(self, locale: str) -> None:
@@ -240,6 +298,7 @@ class MultiCountryHolidayProvider:
             self.country_code = expected_country
             self._holiday_cache.clear()
             self._fallback_cache.clear()
+            self._observance_cache.clear()
 
     def _translate_holiday_name(self, english_name: str) -> str:
         """Translate holiday name based on the current UI locale."""
@@ -275,6 +334,7 @@ class MultiCountryHolidayProvider:
             self.country_code = new_code
             self._holiday_cache.clear()
             self._fallback_cache.clear()
+            self._observance_cache.clear()
             logger.debug(
                 f"🌍 Changed country from {old_country} to {self.get_country_display_name()}"
             )
@@ -296,7 +356,7 @@ class MultiCountryHolidayProvider:
 
                 # Special handling for UK to get complete holiday set including Easter Monday and August Bank Holiday
                 if holiday_code == "UK":
-                    raw_holidays = holidays.UK(state="England", years=year)
+                    raw_holidays = holidays.UK(subdiv="England", years=year)
                     logger.debug(
                         f"📅 Loaded UK (England) holidays for {country_info['name']} ({year})"
                     )
@@ -313,7 +373,9 @@ class MultiCountryHolidayProvider:
                     filtered_holidays = holidays.HolidayBase()
                     for holiday_date, holiday_name in raw_holidays.items():
                         # Skip generic "Sunday" entries that are not real holidays
-                        if holiday_name.strip() == "Sunday":
+                        if (
+                            holiday_name.strip() == "Sunday"
+                        ):  # pragma: no cover - SE bare-Sunday entries gone in holidays 0.75
                             logger.debug(
                                 f"🚫 Filtering out bogus Sunday holiday: {holiday_date} - {holiday_name}"
                             )
@@ -329,7 +391,9 @@ class MultiCountryHolidayProvider:
                     # Use holidays directly for other countries - no filtering needed
                     self._holiday_cache[cache_key] = raw_holidays
 
-            except Exception as e:
+            except (
+                Exception
+            ) as e:  # pragma: no cover - defensive; valid country codes do not raise
                 logger.warning(
                     f"⚠️ Failed to load holidays for {self.country_code} ({year}): {e}"
                 )
@@ -352,7 +416,9 @@ class MultiCountryHolidayProvider:
                         month, day = map(int, date_str.split("-"))
                         holiday_date = date(year, month, day)
                         custom_holidays[holiday_date] = name
-                    except ValueError:
+                    except (
+                        ValueError
+                    ):  # pragma: no cover - defensive; CUSTOM_HOLIDAYS dates are valid
                         continue
 
                 logger.debug(
@@ -381,13 +447,49 @@ class MultiCountryHolidayProvider:
                     month, day = map(int, date_str.split("-"))
                     holiday_date = date(year, month, day)
                     fallback_holidays[holiday_date] = name
-                except ValueError:
+                except (
+                    ValueError
+                ):  # pragma: no cover - defensive; FALLBACK_HOLIDAYS dates are valid
                     continue
 
             # Use fallback holidays directly - no filtering needed
             self._fallback_cache[cache_key] = fallback_holidays
 
         return self._fallback_cache[cache_key]
+
+    def _get_observances_for_year(self, year: int) -> Dict[date, str]:
+        """Get cultural observances (non-bank-holiday days) for a year.
+
+        Observances (Father's Day, Valentine's Day, ...) are display-only
+        markers: they appear in the calendar but are NOT days off, so they are
+        deliberately excluded from is_holiday and the working-day calculations.
+        """
+        cache_key = f"{self.country_code}_obs_{year}"
+        if cache_key not in self._observance_cache:
+            self._observance_cache[cache_key] = observance_dates(
+                self.country_code, year
+            )
+        return self._observance_cache[cache_key]
+
+    def _resolve_holiday(self, check_date: date) -> Optional[tuple]:
+        """Return (english_name, type) for a date, or None.
+
+        Bank/public holidays win over observances when both fall on a date.
+        ``type`` is one of 'bank_holiday' or 'observance'.
+        """
+        holidays_for_year = self._get_holidays_for_year(check_date.year)
+        if check_date in holidays_for_year:
+            return holidays_for_year[check_date], "bank_holiday"
+
+        fallback_holidays = self._get_fallback_holidays_for_year(check_date.year)
+        if check_date in fallback_holidays:
+            return fallback_holidays[check_date], "bank_holiday"
+
+        observances = self._get_observances_for_year(check_date.year)
+        if check_date in observances:
+            return observances[check_date], "observance"
+
+        return None
 
     def is_holiday(self, check_date: date) -> bool:
         """
@@ -408,7 +510,7 @@ class MultiCountryHolidayProvider:
             fallback_holidays = self._get_fallback_holidays_for_year(check_date.year)
             return check_date in fallback_holidays
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - defensive guard
             logger.warning(f"⚠️ Error checking holiday for {check_date}: {e}")
             return False
 
@@ -423,20 +525,12 @@ class MultiCountryHolidayProvider:
             Translated holiday name if the date is a holiday, None otherwise
         """
         try:
-            holidays_for_year = self._get_holidays_for_year(check_date.year)
-            if check_date in holidays_for_year:
-                english_name = holidays_for_year[check_date]
-                return self._translate_holiday_name(english_name)
-
-            # Check fallback holidays if not found in main holidays
-            fallback_holidays = self._get_fallback_holidays_for_year(check_date.year)
-            english_name = fallback_holidays.get(check_date)
-            if english_name:
-                return self._translate_holiday_name(english_name)
-
+            resolved = self._resolve_holiday(check_date)
+            if resolved is not None:
+                return self._translate_holiday_name(resolved[0])
             return None
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - defensive guard
             logger.warning(f"⚠️ Error getting holiday for {check_date}: {e}")
             return None
 
@@ -453,18 +547,19 @@ class MultiCountryHolidayProvider:
         try:
             from calendar_app.data.models import Holiday
 
-            holiday_name = self.get_holiday(check_date)
-            if holiday_name:
+            resolved = self._resolve_holiday(check_date)
+            if resolved is not None:
+                english_name, holiday_type = resolved
                 return Holiday(
-                    name=holiday_name,
+                    name=self._translate_holiday_name(english_name),
                     date=check_date,
                     country_code=self.country_code,
-                    type="bank_holiday",
+                    type=holiday_type,
                     is_observed=True,
                 )
             return None
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - defensive guard
             logger.warning(f"⚠️ Error getting holiday object for {check_date}: {e}")
             return None
 
@@ -503,9 +598,24 @@ class MultiCountryHolidayProvider:
                     )
                     month_holidays.append(holiday)
 
+            # Add observances (display-only cultural days). A bank holiday on the
+            # same date wins, so observances do not override real public holidays.
+            observances = self._get_observances_for_year(year)
+            for holiday_date, english_name in observances.items():
+                if holiday_date.month == month and holiday_date not in all_holidays:
+                    month_holidays.append(
+                        Holiday(
+                            name=self._translate_holiday_name(english_name),
+                            date=holiday_date,
+                            country_code=self.country_code,
+                            type="observance",
+                            is_observed=True,
+                        )
+                    )
+
             return month_holidays
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - defensive guard
             logger.warning(f"⚠️ Error getting holidays for {year}-{month:02d}: {e}")
             return []
 
@@ -558,7 +668,7 @@ class MultiCountryHolidayProvider:
 
             return working_days
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover - defensive guard
             logger.warning(f"⚠️ Error getting working days for {year}-{month:02d}: {e}")
             return []
 
@@ -566,6 +676,7 @@ class MultiCountryHolidayProvider:
         """Clear the holiday cache to free memory."""
         self._holiday_cache.clear()
         self._fallback_cache.clear()
+        self._observance_cache.clear()
         logger.debug("🧹 Holiday cache cleared")
 
     def refresh_translations(self) -> None:
@@ -614,6 +725,21 @@ class MultiCountryHolidayProvider:
         logger.debug(
             f"🌍 Complete locale refresh completed - using locale: {current_locale}, country: {self.country_code}"
         )
+
+    @classmethod
+    def get_country_from_timezone(cls, timezone_id: Optional[str]) -> Optional[str]:
+        """🌍 Infer a supported holiday-country code from an IANA timezone id.
+
+        Args:
+            timezone_id: IANA timezone (e.g. 'Europe/London'), or None.
+
+        Returns:
+            A SUPPORTED_COUNTRIES key (e.g. 'GB'), or None when the timezone
+            does not map to a country we provide holidays for.
+        """
+        if not timezone_id:
+            return None
+        return cls.TIMEZONE_TO_COUNTRY.get(timezone_id)
 
     @classmethod
     def get_supported_countries(cls) -> Dict[str, Dict[str, str]]:

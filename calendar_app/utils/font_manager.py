@@ -5,7 +5,6 @@ Handles font detection, fallbacks, and cross-platform compatibility
 
 import logging
 from PySide6.QtGui import QFontDatabase, QFont
-from PySide6.QtCore import QCoreApplication
 import platform
 
 logger = logging.getLogger(__name__)
