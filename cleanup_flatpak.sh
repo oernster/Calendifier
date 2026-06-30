@@ -25,7 +25,9 @@ fi
 
 section "Removing flatpak build artefacts"
 rm -f "${BUNDLE}"
-rm -rf build repo .flatpak-builder
+rm -rf .flatpak-build .flatpak-repo .flatpak-builder
+rm -f "${APP_ID}.yml"
+rm -rf packaging
 echo "  Done."
 
 echo
