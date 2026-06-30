@@ -222,3 +222,12 @@ NOTES.md
 # committed; the manifest and the packaging/ helpers are generated at build time)
 /com.calendifier.Calendar.yml
 /packaging/
+
+# Linux: scratch artifacts from local Flatpak launch/desktop experiments
+# (JSON manifest variant, exported desktop entry, runner/wrapper launchers and
+# generated Qt runtime config; not produced by the committed build script)
+/com.calendifier.Calendar.json
+/com.calendifier.Calendar.desktop
+/calendifier-runner.sh
+/wrapper.py
+/qt-config/

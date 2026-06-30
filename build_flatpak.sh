@@ -105,8 +105,9 @@ cat > "packaging/${APP_ID}.metainfo.xml" <<XML
   <id>${APP_ID}</id>
   <name>Calendifier</name>
   <summary>Cross-platform desktop calendar with international holidays</summary>
-  <metadata_license>LGPL-3.0</metadata_license>
-  <project_license>LGPL-3.0</project_license>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LGPL-3.0-only</project_license>
+  <launchable type="desktop-id">${APP_ID}.desktop</launchable>
   <description>
     <p>Calendifier is a cross-platform desktop calendar with an analogue clock,
     event handling, note taking and international public holidays and cultural
@@ -183,7 +184,7 @@ modules:
     buildsystem: simple
     build-commands:
       - install -d /app/share/calendifier
-      - cp -r main.py calendar_app assets VERSION /app/share/calendifier/
+      - cp -r main.py version.py calendar_app assets VERSION /app/share/calendifier/
       - install -Dm644 LGPL3_LICENSE.txt /app/share/calendifier/LGPL3_LICENSE.txt
       - install -Dm755 packaging/calendifier-launcher.sh /app/bin/calendifier
       - install -Dm644 packaging/${APP_ID}.desktop /app/share/applications/${APP_ID}.desktop
